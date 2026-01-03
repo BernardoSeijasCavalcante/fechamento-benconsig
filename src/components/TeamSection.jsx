@@ -31,7 +31,7 @@ const TeamSection = ({ supervisor, data }) => {
   // Separação por períodos para os gráficos
   // Filtramos apenas quem tem valor > 0 ou não é nulo para limpar o gráfico visualmente, se desejar
   const manha = data
-    .filter(d => d.periodo === 'MANH�')
+    .filter(d => (d.periodo === 'MANH�' || d.periodo === 'MANHÃ'))
     .sort((a,b) => b.vendaPortabilidade - a.vendaPortabilidade);
     
   const tarde = data
