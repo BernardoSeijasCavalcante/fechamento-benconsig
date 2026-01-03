@@ -1,0 +1,59 @@
+:root {
+  --bg-color: #0e1117;
+  --card-bg: #1c2029;
+  --gold: #D4AF37;
+  --text-primary: #ffffff;
+  --text-secondary: #a0a0a0;
+  --danger: #ff4d4f;
+  --success: #00b96b;
+}
+
+body {
+  background-color: var(--bg-color);
+  color: var(--text-primary);
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+h1, h2, h3 {
+  color: var(--gold);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* Utilitários */
+.text-gold { color: var(--gold); }
+.text-red { color: var(--danger); }
+.card {
+  background-color: var(--card-bg);
+  border: 1px solid var(--gold);
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.flex-row { display: flex; gap: 20px; }
+.flex-col { display: flex; flex-direction: column; gap: 10px; }
+
+/* Tooltip (?) */
+.info-tooltip {
+  cursor: help;
+  color: var(--gold);
+  margin-left: 5px;
+  font-weight: bold;
+  border: 1px solid var(--gold);
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+}
