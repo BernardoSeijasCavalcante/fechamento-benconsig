@@ -33,7 +33,7 @@ const TeamSection = ({ supervisor, data }) => {
   const manha = data
     .filter(d => (d.periodo === 'MANH�' || d.periodo === 'MANHÃ'))
     .sort((a,b) => b.vendaPortabilidade - a.vendaPortabilidade);
-    
+      
   const tarde = data
     .filter(d => d.periodo === 'TARDE')
     .sort((a,b) => b.vendaPortabilidade - a.vendaPortabilidade);
