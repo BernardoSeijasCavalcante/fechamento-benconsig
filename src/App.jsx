@@ -9,6 +9,7 @@ import Layout from './components/Layout';
 import Meme from './assets/meme.png';
 import Logo from './assets/logo.png';
 import { TEAM_FILES } from './data';
+import './App.css'
 
 const Home = ({ allData }) => {
   return (

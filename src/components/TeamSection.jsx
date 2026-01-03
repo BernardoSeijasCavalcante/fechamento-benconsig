@@ -147,7 +147,7 @@ const TeamSection = ({ supervisor, data }) => {
             </div>
 
             <div>
-                <span style={{color: '#888', fontSize: '0.9rem'}}>Ticket Médio <TooltipInfo text="Quantidade Total vendida" /></span>
+                <span style={{color: '#888', fontSize: '0.9rem'}}>TMA - RECEPTIVO (URA) <TooltipInfo text="Quantidade Total vendida" /></span>
                 <div style={{ fontSize: '1.4rem', color: '#fff', fontWeight: 'bold' }}>
                     {tmaMedio}
                 </div>
