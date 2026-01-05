@@ -156,7 +156,7 @@ const TeamSection = ({ supervisor, data, hideFired, rankingData }) => {
         </div>
 
         {/* === ÁREA DIREITA: GRÁFICOS === */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '30px', minWidth: '300px' }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '30px', minWidth: '800px' }}>
            {renderChart(manha, "MANHÃ")}
            <div style={{borderTop: '1px dashed #333'}}></div>
            {renderChart(tarde, "TARDE")}
