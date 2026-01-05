@@ -3,12 +3,47 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, LabelL
 import { useNavigate } from 'react-router-dom';
 import TooltipInfo from './TooltipInfo';
 
-const TeamSection = ({ supervisor, data }) => {
+// Componente customizado para tornar o nome clicável
+const CustomYAxisTick = ({ x, y, payload, data, onClick }) => {
+  const operator = data.find(d => d.nome === payload.value);
+  
+  // Função para encurtar nomes gigantes se necessário
+  const truncateText = (text, maxLength) => {
+      if (text.length > maxLength) {
+          return text.substring(0, maxLength) + '...';
+      }
+      return text;
+  };
+
+  // Ajuste o 35 abaixo se ainda estiver vazando (número de caracteres)
+  const displayName = truncateText(payload.value, 35); 
+
+  return (
+    <g transform={`translate(${x},${y})`}>
+      <text
+        x={-10} // Um pouco mais de espaço entre o nome e a barra
+        y={4}
+        textAnchor="end"
+        fill="white"
+        fontSize={12} // Reduzi levemente a fonte para caber mais texto
+        fontWeight={500}
+        cursor="pointer"
+        onClick={() => operator && onClick(operator)}
+        onMouseEnter={(e) => e.target.style.fill = '#D4AF37'}
+        onMouseLeave={(e) => e.target.style.fill = 'white'}
+      >
+        {displayName}
+      </text>
+    </g>
+  );
+};
+
+const TeamSection = ({ supervisor, data, hideFired, rankingData }) => {
   const navigate = useNavigate();
 
-  // --- LÓGICA DE DADOS ---
-  // Tenta ler o resumo oficial vindo do rodapé do CSV (via csvParser)
-  // Se não existir, faz o cálculo manual como fallback.
+  const activeData = hideFired 
+      ? data.filter(d => !d.despedido) 
+      : data;
 
   const resumo = data.summary || {};
   
@@ -24,13 +59,17 @@ const TeamSection = ({ supervisor, data }) => {
   const ticketMedio = resumo.ticketMedio || '0.0'
 
   const tmaMedio = resumo.tmaGeral || '00:00:00?'
+
+  const turnOver = resumo.turnOver 
+      ? (resumo.turnOver * 100) 
+      : (data.length > 0 ? (data.reduce((acc, curr) => acc + curr.atingimento, 0) / data.length) * 100 : 0);
   
   // Ranking da equipe (se disponível no rodapé)
   const rankingEquipe = resumo.posicaoRanking ? `${resumo.posicaoRanking}º` : "-";
 
   // Separação por períodos para os gráficos
   // Filtramos apenas quem tem valor > 0 ou não é nulo para limpar o gráfico visualmente, se desejar
-  const manha = data
+  const manha = activeData
     .filter(d => d.periodo === 'INTEGRAL')
     .sort((a,b) => b.vendaPortabilidade - a.vendaPortabilidade);
 
@@ -39,51 +78,70 @@ const TeamSection = ({ supervisor, data }) => {
   };
 
   // --- COMPONENTE DE GRÁFICO REUTILIZÁVEL ---
-  const renderChart = (chartData, title) => (
-    <div style={{ flex: 1, minHeight: '300px' }}>
-      <h4 style={{textAlign: 'center', color: '#fff', marginBottom: '10px'}}>{title}</h4>
-      
-      {chartData.length === 0 ? (
-        <div style={{textAlign: 'center', color: '#666', marginTop: '50px'}}>Sem dados para este período.</div>
-      ) : (
-        <ResponsiveContainer width="100%" height={Math.max(chartData.length * 50, 300)}>
-            {/* Altura dinâmica baseada no nº de operadores para não espremer as barras */}
-          <BarChart layout="vertical" data={chartData} margin={{ left: 10, right: 50, top: 0, bottom: 0 }}>
-            <XAxis type="number" hide />
-            <YAxis 
-                type="category" 
-                dataKey="nome" 
-                width={150} 
-                tick={{fill: 'white', fontSize: 11}} 
-                interval={0}
-            />
-            <Tooltip 
-              cursor={{fill: 'rgba(255, 255, 255, 0.1)'}}
-              formatter={(value) => [`R$ ${value.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`, 'Venda']}
-              contentStyle={{backgroundColor: '#1c2029', borderColor: '#D4AF37', color: '#fff'}}
-              itemStyle={{color: '#D4AF37'}}
-            />
-            <Bar dataKey="vendaPortabilidade" onClick={handleBarClick} cursor="pointer" barSize={30}>
-              {chartData.map((entry, index) => (
-                <Cell 
-                  key={`cell-${index}`} 
-                  // Vermelho se despedido, Dourado padrão
-                  fill={entry.despedido ? '#ff4d4f' : '#D4AF37'} 
-                /> 
-              ))}
-              <LabelList 
-                dataKey="vendaPortabilidade" 
-                position="right" 
-                formatter={(val) => `R$ ${val.toLocaleString('pt-BR', {style:'decimal', maximumFractionDigits:0})}`}
-                fill="white"
-                style={{fontSize: '11px', fontWeight: 'bold'}}
-              />
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
-      )}
-    </div>
-  );
+  const renderChart = (chartData, title) => {
+    // Altura dinâmica: 80px por operador
+    const dynamicHeight = Math.max(chartData.length * 80, 300);
+
+    return (
+      <div style={{ flex: 1, minHeight: '300px' }}>
+        <h4 style={{textAlign: 'center', color: '#fff', marginBottom: '10px'}}>{title}</h4>
+        
+        {chartData.length === 0 ? (
+          <div style={{textAlign: 'center', color: '#666', padding: '50px'}}>Sem dados para este período.</div>
+        ) : (
+          <ResponsiveContainer width="99%" height={dynamicHeight}>
+            <BarChart 
+                layout="vertical" 
+                data={chartData} 
+                margin={{ left: 0, right: 60, top: 0, bottom: 0 }}
+                barCategoryGap={15}
+            >
+                <XAxis type="number" hide domain={[0, 'dataMax']} />
+                
+                {/* --- MUDANÇA AQUI: Usando o CustomYAxisTick --- */}
+                <YAxis 
+                    type="category" 
+                    dataKey="nome" 
+                    width={180} 
+                    interval={0}
+                    // Passamos o componente customizado na propriedade 'tick'
+                    // Ele recebe os dados e a função de clique
+                    tick={<CustomYAxisTick data={chartData} onClick={handleBarClick} />}
+                />
+                {/* ---------------------------------------------- */}
+
+                <Tooltip 
+                    cursor={{fill: 'rgba(255, 255, 255, 0.05)'}}
+                    formatter={(value) => [`R$ ${value.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`, 'Venda']}
+                    contentStyle={{backgroundColor: '#1c2029', borderColor: '#D4AF37', color: '#fff', borderRadius: '8px'}}
+                />
+                <Bar 
+                    dataKey="vendaPortabilidade" 
+                    onClick={handleBarClick} 
+                    cursor="pointer" 
+                    barSize={50}
+                    radius={[0, 4, 4, 0]} 
+                >
+                    {chartData.map((entry, index) => (
+                        <Cell 
+                          key={`cell-${index}`} 
+                          fill={entry.despedido ? '#ff4d4f' : '#D4AF37'} 
+                        /> 
+                    ))}
+                    <LabelList 
+                        dataKey="vendaPortabilidade" 
+                        position="right" 
+                        fill="white" 
+                        style={{fontSize: '13px', fontWeight: 'bold'}}
+                        formatter={(val) => `R$ ${val.toLocaleString('pt-BR', {style:'decimal', maximumFractionDigits:0})}`}
+                    />
+                </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div className="card" style={{ marginBottom: '40px', borderTop: '4px solid var(--gold)' }}>
@@ -114,9 +172,9 @@ const TeamSection = ({ supervisor, data }) => {
           <div style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '15px' }}>
             
             <div style={{ borderBottom: '1px solid #333', paddingBottom: '10px' }}>
-                <span style={{color: '#888', fontSize: '0.9rem'}}>Total Vendido <TooltipInfo text="Soma total de portabilidade (Rodapé)" /></span>
+                <span style={{color: '#888', fontSize: '0.9rem'}}>Total Vendido <TooltipInfo text="Total vendido no período"/></span>
                 <div style={{ fontSize: '1.4rem', color: 'var(--gold)', fontWeight: 'bold' }}>
-                    R$ {totalVendido.toLocaleString('pt-BR', {minimumFractionDigits: 2})}
+                    R$ {(totalVendido + totalMargem).toLocaleString('pt-BR', {minimumFractionDigits: 2})}
                 </div>
             </div>
 
@@ -128,31 +186,39 @@ const TeamSection = ({ supervisor, data }) => {
             </div>
 
             <div>
-                <span style={{color: '#888', fontSize: '0.9rem'}}>Margem/Cartão <TooltipInfo text="Quantidade Total vendida" /></span>
+                <span style={{color: '#888', fontSize: '0.9rem'}}>Margem/Cartão <TooltipInfo text="Quantidade Total vendida em Margem/Cartão" /></span>
                 <div style={{ fontSize: '1.4rem', color: '#fff', fontWeight: 'bold' }}>
-                    {parseInt(totalMargem)}
+                    R$ {totalMargem.toLocaleString('pt-BR', {minimumFractionDigits: 2})}
                 </div>
             </div>
             
             <div>
-                <span style={{color: '#888', fontSize: '0.9rem'}}>Ticket Médio <TooltipInfo text="Quantidade Total vendida" /></span>
+                <span style={{color: '#888', fontSize: '0.9rem'}}>Ticket Médio <TooltipInfo text="Total vendido por operador" /></span>
                 <div style={{ fontSize: '1.4rem', color: '#fff', fontWeight: 'bold' }}>
                     R$ {ticketMedio.toLocaleString('pt-BR', {minimumFractionDigits: 2})}
                 </div>
             </div>
 
             <div>
-                <span style={{color: '#888', fontSize: '0.9rem'}}>Ticket Médio <TooltipInfo text="Quantidade Total vendida" /></span>
+                <span style={{color: '#888', fontSize: '0.9rem'}}>TMA <TooltipInfo text="Tempo médio em que cada operador da equipe permanece em atendimento" /></span>
                 <div style={{ fontSize: '1.4rem', color: '#fff', fontWeight: 'bold' }}>
                     {tmaMedio}
                 </div>
             </div>
 
+            <div>
+                <span style={{color: '#888', fontSize: '0.9rem'}}>TurnOver <TooltipInfo text="Taxa de rotatividade de colaboradores na equipe" /></span>
+                <div style={{ fontSize: '1.4rem', color: '#fff', fontWeight: 'bold' }}>
+                    {turnOver.toFixed(1)}%
+                </div>
+            </div>
+            
+
           </div>
         </div>
 
         {/* === ÁREA DIREITA: GRÁFICOS === */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '30px', minWidth: '300px' }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '30px', minWidth: '600px' }}>
            {renderChart(manha, "INTEGRAL")}
         </div>
 

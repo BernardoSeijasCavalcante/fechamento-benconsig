@@ -137,10 +137,12 @@ export const parseCSV = (csvText, supervisorName) => {
         const summary = {
             totalVendido: footerValuesRow ? parseNumber(footerValuesRow[0]) : 0,
             atingimentoMedio: footerValuesRow ? parseNumber(footerValuesRow[1]) : 0,
-            margemTotal: footerValuesRow ? parseNumber(footerValuesRow[2]) : 0, // Fallback se vier no índice 2
+            quantMargem: footerValuesRow ? parseNumber(footerValuesRow[2]) : 0, // Fallback se vier no índice 2
             ticketMedio: footerValuesRow ? parseNumber(footerValuesRow[3]) : 0,
             tmaGeral: footerValuesRow ? parseTime(footerValuesRow[4]) : "00:00:00",
-            posicaoRanking: footerValuesRow ? (parseInt(footerValuesRow[5]) || "-") : "-"
+            posicaoRanking: footerValuesRow ? (parseInt(footerValuesRow[5]) || "-") : "-",
+            turnOver: footerValuesRow ? parseNumber(footerValuesRow[6]) : 0,
+            margemTotal: footerValuesRow ? parseNumber(footerValuesRow[7]) : 0,
         };
         
         // Fallback de soma manual se o rodapé estiver zerado ou ausente
