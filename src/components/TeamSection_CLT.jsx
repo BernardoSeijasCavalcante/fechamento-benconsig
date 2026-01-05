@@ -16,7 +16,7 @@ const CustomYAxisTick = ({ x, y, payload, data, onClick }) => {
   };
 
   // Ajuste o 35 abaixo se ainda estiver vazando (número de caracteres)
-  const displayName = truncateText(payload.value, 35); 
+  const displayName = truncateText(payload.value, 19); 
 
   return (
     <g transform={`translate(${x},${y})`}>
