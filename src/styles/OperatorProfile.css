@@ -1,0 +1,17 @@
+/* OperatorProfile.css */
+
+.container {
+    /* Ocupa toda a largura disponível para poder calcular o centro */
+    width: 100%;
+    
+    /* Transforma o container em um centralizador flexível */
+    display: flex;
+    justify-content: center; /* Centraliza horizontalmente */
+    align-items: flex-start; /* Alinha no topo (evita que estique verticalmente) */
+}
+
+.card {
+    /* Define o tamanho fixo ou mínimo do cartão */
+    min-width: 1300px; 
+    max-width: 95vw; /* Garante uma margem de segurança em telas menores se quiser */
+}

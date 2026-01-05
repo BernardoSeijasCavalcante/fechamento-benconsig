@@ -2,6 +2,7 @@ import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Calendar, Clock, AlertCircle } from 'lucide-react'; // Certifique-se de ter lucide-react instalado
 import TooltipInfo from '../components/TooltipInfo';
+import '../styles/OperatorProfile.css'
 
 const OperatorProfile = () => {
   const location = useLocation();
