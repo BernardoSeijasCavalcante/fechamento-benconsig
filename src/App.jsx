@@ -1,100 +1,172 @@
 import React, { useEffect, useState } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useParams, useLocation, useNavigate } from 'react-router-dom';
+import Layout from './components/Layout';
 import TeamSection from './components/TeamSection';
 import TeamSection_CLT from './components/TeamSection_CLT';
 import OperatorProfile from './pages/OperatorProfile';
-import { parseCSV } from './utils/csvParser';
-import './styles/App.css';
-import Layout from './components/Layout';
-import Meme from './assets/meme.png';
+import { parseCSV, parseRankingCSV } from './utils/csvParser';
+import { TEAM_FILES, RANKING_CONTENT } from './data';
 import Logo from './assets/logo.png';
-import { TEAM_FILES } from './data';
 import './App.css'
+import './styles/App.css';
 
+// --- COMPONENTE HOME (Menu de Seleção) ---
 const Home = ({ allData }) => {
+  const navigate = useNavigate();
+  const [selectedSupervisor, setSelectedSupervisor] = useState(null);
+
+  const handleSelectMode = (mode) => {
+    if (selectedSupervisor) {
+      // Navega para a rota da equipe passando o modo (director/collaborator) no state
+      navigate(`/team/${selectedSupervisor}`, { state: { mode } });
+      setSelectedSupervisor(null);
+    }
+  };
+
   return (
-    <div className="container">
-      {/* Cabeçalho e Intro [cite: 6, 7] */}
-      <header style={{ textAlign: 'center', marginBottom: '50px' }}>
-        <img src={Logo} alt="BC Logo" style={{ height: '300px', marginBottom: '20px' }} />
-        <h1>Relatório de Fechamento <span className="text-gold">Dezembro 2026</span></h1>
-        
-        <div className="card" style={{ maxWidth: '800px', margin: '0 auto', textAlign: 'center' }}>
-            <h3 style={{fontStyle: 'italic'}}>"O futuro pertence àqueles que acreditam na beleza de seus sonhos."</h3>
-            <p>
-                Estamos encerrando 2026 com chave de ouro. A BenConsig espera um futuro grandioso para todos os seus vendedores.
-            </p>
-        </div>
-      </header>
+    <div className="container" style={{textAlign: 'center', paddingTop: '50px'}}>
+      <img src={Logo} alt="BC Logo" style={{ height: '150px', marginBottom: '20px' }} />
+      <h1 style={{marginBottom: '40px'}}>Selecione a <span className="text-gold">Equipe</span></h1>
 
-      {/* Seções das Equipes */}
-      {Object.keys(allData).map(supervisor => (
-        supervisor === "KAWANY" ? (
-          <TeamSection_CLT 
-            key={supervisor} 
-            supervisor={supervisor} 
-            data={allData[supervisor]} 
-          />
-        ) : (
-          <TeamSection 
-            key={supervisor} 
-            supervisor={supervisor} 
-            data={allData[supervisor]} 
-          />
-        )
-      ))}
-
-      {/* Seção do Meme [cite: 8, 9] */}
-      <div style={{ display: 'flex', justifyContent: 'center', margin: '40px 0' }}>
-         <div style={{ maxWidth: '500px', textAlign: 'center' }}>
-            <p style={{ fontSize: '1.2rem', marginBottom: '10px' }}>
-                "Esse será um GRAAAAAANDE ANO, REPLETO DE GRAAAANDES CONQUISTAS!"
-            </p>
-            <img 
-                src={Meme}
-                alt="Meme WhatsApp" 
-                style={{ width: '70%', borderRadius: '10px', border: '2px solid var(--gold)' }} 
-            />
-         </div>
+      {/* Grid de Botões */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', maxWidth: '800px', margin: '0 auto' }}>
+        {Object.keys(allData).map(sup => (
+          <button 
+            key={sup}
+            onClick={() => setSelectedSupervisor(sup)}
+            className="card"
+            style={{ 
+              cursor: 'pointer', 
+              padding: '30px', 
+              fontSize: '1.2rem', 
+              fontWeight: 'bold',
+              color: '#fff',
+              border: '2px solid var(--gold)',
+              background: 'linear-gradient(145deg, #1c2029, #151921)',
+              transition: 'transform 0.2s'
+            }}
+            onMouseOver={(e) => e.target.style.transform = 'scale(1.05)'}
+            onMouseOut={(e) => e.target.style.transform = 'scale(1)'}
+          >
+            {sup}
+          </button>
+        ))}
       </div>
 
+      {/* Modal de Seleção (Aparece quando clica no supervisor) */}
+      {selectedSupervisor && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
+        }}>
+          <div className="card" style={{ width: '400px', padding: '40px', textAlign: 'center', border: '2px solid var(--gold)' }}>
+            <h2 style={{color: 'var(--gold)', marginBottom: '30px'}}>{selectedSupervisor}</h2>
+            <p style={{marginBottom: '30px', color: '#aaa'}}>Selecione o modo de visualização:</p>
+            
+            <div style={{display: 'flex', flexDirection: 'column', gap: '15px'}}>
+              <button 
+                onClick={() => handleSelectMode('collaborator')}
+                style={{ padding: '15px', background: '#0074D9', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontSize: '1rem', fontWeight: 'bold' }}
+              >
+                👤 Visão Colaborador
+              </button>
+              
+              <button 
+                onClick={() => handleSelectMode('director')}
+                style={{ padding: '15px', background: 'transparent', color: '#ff4d4f', border: '1px solid #ff4d4f', borderRadius: '5px', cursor: 'pointer', fontSize: '1rem' }}
+              >
+                🕶️ Visão Diretor
+              </button>
+            </div>
+            
+            <button 
+              onClick={() => setSelectedSupervisor(null)}
+              style={{ marginTop: '20px', background: 'transparent', border: 'none', color: '#666', cursor: 'pointer', textDecoration: 'underline' }}
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
+const TeamPage = ({ allData, rankingData }) => { 
+  const { supervisor } = useParams();
+  const location = useLocation();
+  const navigate = useNavigate();
+  
+  const mode = location.state?.mode || 'collaborator';
+  const data = allData[supervisor];
+
+  if (!data) return <div className="container">Equipe não encontrada.</div>;
+
+  return (
+    <div className="container">
+      <button 
+        onClick={() => navigate('/')} 
+        style={{ marginTop: '20px', background: 'none', border: 'none', color: 'var(--gold)', cursor: 'pointer', fontSize: '1rem' }}
+      >
+        ← Voltar ao Menu
+      </button>
+
+      {supervisor === "KAWANY" ? (
+        <TeamSection_CLT 
+           supervisor={supervisor} 
+           data={data} 
+           hideFired={mode === 'collaborator'} 
+        />
+      ) : (
+        <TeamSection 
+           supervisor={supervisor} 
+           data={data} 
+           hideFired={mode === 'collaborator'} 
+           rankingData={supervisor === 'DIEGO' ? rankingData : null} 
+        />
+      )}
+    </div>
+  );
+};
+
+// --- APP PRINCIPAL ---
 function App() {
   const [dataByTeam, setDataByTeam] = useState({});
+  const [rankingData, setRankingData] = useState([]); 
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const loadAllData = async () => {
       const teamsData = {};
       
+      // Carrega Equipes
       for (const item of TEAM_FILES) {
         try {
           const parsed = await parseCSV(item.content, item.supervisor);
           teamsData[item.supervisor] = parsed;
-          
-        } catch (error) {
-          console.error("Erro ao processar " + item.supervisor, error);
-        }
+        } catch (error) { console.error("Erro " + item.supervisor, error); }
       }
+
+      // Carrega Ranking Geral
+      try {
+          const parsedRanking = await parseRankingCSV(RANKING_CONTENT);
+          setRankingData(parsedRanking);
+      } catch (err) { console.error("Erro Ranking", err); }
       
       setDataByTeam(teamsData);
       setLoading(false);
     };
-
     loadAllData();
   }, []);
 
-  if (loading) return <div className="container">Carregando dados tecnológicos...</div>;
+  if (loading) return <div className="container">Carregando...</div>;
 
   return (
     <BrowserRouter>
       <Routes>
-        {/* Envolvemos tudo na rota do Layout */}
         <Route element={<Layout />}>
           <Route path="/" element={<Home allData={dataByTeam} />} />
+          <Route path="/team/:supervisor" element={<TeamPage allData={dataByTeam} rankingData={rankingData} />} />
           <Route path="/operator/:name" element={<OperatorProfile />} />
         </Route>
       </Routes>

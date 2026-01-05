@@ -103,8 +103,7 @@ const TeamSection = ({ supervisor, data }) => {
            {/* Foto Supervisor */}
            <div style={{ position: 'relative', display: 'inline-block', marginBottom: '15px' }}>
                 <img 
-                    src={`/assets/fotos/${supervisor}.jpeg`} 
-                    onError={(e) => e.target.src = 'https://via.placeholder.com/150?text=Supervisor'}
+                    src={`/fotos/${supervisor}.jpeg`} 
                     alt={supervisor} 
                     style={{ borderRadius: '50%', width: '130px', height: '130px', border: '3px solid var(--gold)', objectFit: 'cover' }} 
                 />

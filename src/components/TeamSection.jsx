@@ -3,12 +3,12 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, LabelL
 import { useNavigate } from 'react-router-dom';
 import TooltipInfo from './TooltipInfo';
 
-const TeamSection = ({ supervisor, data }) => {
+const TeamSection = ({ supervisor, data, hideFired, rankingData }) => {
   const navigate = useNavigate();
 
-  // --- LÓGICA DE DADOS ---
-  // Tenta ler o resumo oficial vindo do rodapé do CSV (via csvParser)
-  // Se não existir, faz o cálculo manual como fallback.
+  const activeData = hideFired 
+      ? data.filter(d => !d.despedido) 
+      : data;
 
   const resumo = data.summary || {};
   
@@ -30,11 +30,11 @@ const TeamSection = ({ supervisor, data }) => {
 
   // Separação por períodos para os gráficos
   // Filtramos apenas quem tem valor > 0 ou não é nulo para limpar o gráfico visualmente, se desejar
-  const manha = data
+  const manha = activeData
     .filter(d => (d.periodo === 'MANH�' || d.periodo === 'MANHÃ'))
     .sort((a,b) => b.vendaPortabilidade - a.vendaPortabilidade);
       
-  const tarde = data
+  const tarde = activeData
     .filter(d => d.periodo === 'TARDE')
     .sort((a,b) => b.vendaPortabilidade - a.vendaPortabilidade);
 
@@ -107,9 +107,8 @@ const TeamSection = ({ supervisor, data }) => {
            {/* Foto Supervisor */}
            <div style={{ position: 'relative', display: 'inline-block', marginBottom: '15px' }}>
                 <img 
-                    src={`/assets/fotos/${supervisor}.jpeg`} 
-                    onError={(e) => e.target.src = 'https://via.placeholder.com/150?text=Supervisor'}
-                    alt={supervisor} 
+                    src={`/fotos/${supervisor}.jpeg`}
+                    alt={supervisor}
                     style={{ borderRadius: '50%', width: '130px', height: '130px', border: '3px solid var(--gold)', objectFit: 'cover' }} 
                 />
            </div>
@@ -119,9 +118,9 @@ const TeamSection = ({ supervisor, data }) => {
           <div style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '15px' }}>
             
             <div style={{ borderBottom: '1px solid #333', paddingBottom: '10px' }}>
-                <span style={{color: '#888', fontSize: '0.9rem'}}>Total Vendido <TooltipInfo text="Soma total de portabilidade (Rodapé)" /></span>
+                <span style={{color: '#888', fontSize: '0.9rem'}}>Total Vendido <TooltipInfo text="Total vendido no período"/></span>
                 <div style={{ fontSize: '1.4rem', color: 'var(--gold)', fontWeight: 'bold' }}>
-                    R$ {totalVendido.toLocaleString('pt-BR', {minimumFractionDigits: 2})}
+                    R$ {(totalVendido + totalMargem).toLocaleString('pt-BR', {minimumFractionDigits: 2})}
                 </div>
             </div>
 
@@ -133,21 +132,21 @@ const TeamSection = ({ supervisor, data }) => {
             </div>
 
             <div>
-                <span style={{color: '#888', fontSize: '0.9rem'}}>Margem/Cartão <TooltipInfo text="Quantidade Total vendida" /></span>
+                <span style={{color: '#888', fontSize: '0.9rem'}}>Margem/Cartão <TooltipInfo text="Quantidade Total vendida em Margem/Cartão" /></span>
                 <div style={{ fontSize: '1.4rem', color: '#fff', fontWeight: 'bold' }}>
-                    {parseInt(totalMargem)}
+                    R$ {totalMargem.toLocaleString('pt-BR', {minimumFractionDigits: 2})}
                 </div>
             </div>
             
             <div>
-                <span style={{color: '#888', fontSize: '0.9rem'}}>Ticket Médio <TooltipInfo text="Quantidade Total vendida" /></span>
+                <span style={{color: '#888', fontSize: '0.9rem'}}>Ticket Médio <TooltipInfo text="Total vendido por operador" /></span>
                 <div style={{ fontSize: '1.4rem', color: '#fff', fontWeight: 'bold' }}>
                     R$ {ticketMedio.toLocaleString('pt-BR', {minimumFractionDigits: 2})}
                 </div>
             </div>
 
             <div>
-                <span style={{color: '#888', fontSize: '0.9rem'}}>TMA - RECEPTIVO (URA) <TooltipInfo text="Quantidade Total vendida" /></span>
+                <span style={{color: '#888', fontSize: '0.9rem'}}>TMA <TooltipInfo text="Tempo médio em que cada operador da equipe permanece em atendimento" /></span>
                 <div style={{ fontSize: '1.4rem', color: '#fff', fontWeight: 'bold' }}>
                     {tmaMedio}
                 </div>
@@ -162,8 +161,43 @@ const TeamSection = ({ supervisor, data }) => {
            <div style={{borderTop: '1px dashed #333'}}></div>
            {renderChart(tarde, "TARDE")}
         </div>
-
+        
       </div>
+
+      {/* === RANKING GERAL (VISÃO DIRETOR) === */}
+      {!hideFired && rankingData && rankingData.length > 0 && (
+        <div style={{ marginTop: '50px', paddingTop: '30px', borderTop: '1px solid var(--gold)' }}>
+            <h3 style={{color: 'var(--gold)', textAlign: 'center', marginBottom: '20px'}}>🏆 RANKING GERAL DA EMPRESA</h3>
+            <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
+                    <thead>
+                        <tr style={{ background: '#151921', color: 'var(--gold)', textAlign: 'left' }}>
+                            <th style={{padding: '12px'}}>Pos</th>
+                            <th style={{padding: '12px'}}>Operador</th>
+                            <th style={{padding: '12px'}}>Total Vendido</th>
+                            <th style={{padding: '12px'}}>Leads</th>
+                            <th style={{padding: '12px'}}>TMA</th>
+                            <th style={{padding: '12px'}}>TTP (Pausa)</th>
+                            <th style={{padding: '12px'}}>TTF (Falado)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {rankingData.map((row, index) => (
+                            <tr key={index} style={{ borderBottom: '1px solid #333', background: index % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.03)' }}>
+                                <td style={{padding: '12px', fontWeight: 'bold'}}>{index + 1}º</td>
+                                <td style={{padding: '12px'}}>{row.nome}</td>
+                                <td style={{padding: '12px', color: 'var(--gold)', fontWeight: 'bold'}}>R$ {row.totalVendido.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                                <td style={{padding: '12px'}}>{row.leads}</td>
+                                <td style={{padding: '12px'}}>{row.tma}</td>
+                                <td style={{padding: '12px'}}>{row.ttp}</td>
+                                <td style={{padding: '12px'}}>{row.ttf}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+      )}
     </div>
   );
 };
