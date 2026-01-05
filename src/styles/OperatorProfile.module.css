@@ -12,6 +12,12 @@
 
 .card {
     /* Define o tamanho fixo ou mínimo do cartão */
+    background-color: var(--card-bg);
+    border: 1px solid var(--gold);
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    margin: 0 auto;
     min-width: 1300px; 
     max-width: 95vw; /* Garante uma margem de segurança em telas menores se quiser */
 }

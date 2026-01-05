@@ -2,7 +2,7 @@ import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Calendar, Clock, AlertCircle } from 'lucide-react'; // Certifique-se de ter lucide-react instalado
 import TooltipInfo from '../components/TooltipInfo';
-import '../styles/OperatorProfile.css'
+import styles from '../styles/OperatorProfile.module.css';
 
 const OperatorProfile = () => {
   const location = useLocation();
@@ -23,7 +23,7 @@ const OperatorProfile = () => {
   );
 
   return (
-    <div className="container">
+    <div className={styles.container}>
       {/* Botão Voltar */}
       <button 
         onClick={() => navigate(-1)} 
@@ -32,7 +32,7 @@ const OperatorProfile = () => {
         <ArrowLeft size={20} style={{marginRight: '5px'}} /> Voltar
       </button>
 
-      <div className="card">
+      <div className={styles.card}>
         {/* --- CABEÇALHO DO PERFIL --- */}
         <div className="flex-row" style={{ alignItems: 'center', marginBottom: '40px', flexWrap: 'wrap', borderBottom: '1px solid #333', paddingBottom: '30px' }}>
           {/* Foto */}
