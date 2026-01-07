@@ -38,6 +38,9 @@ const CustomYAxisTick = ({ x, y, payload, data, onClick }) => {
   );
 };
 
+const fmtMoney = (val) => `R$ ${(val || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+const fmtPct = (val) => `${((val || 0) * 100).toFixed(1)}%`;
+
 const TeamSection = ({ supervisor, data, hideFired, rankingData }) => {
   const navigate = useNavigate();
 
@@ -46,30 +49,12 @@ const TeamSection = ({ supervisor, data, hideFired, rankingData }) => {
       : data;
 
   const resumo = data.summary || {};
+
+  let kpiData = resumo["geral"] || {};
   
-  const totalVendido = resumo.totalVendido || data.reduce((acc, curr) => acc + curr.vendaPortabilidade, 0);
-  
-  // O atingimento no rodapé geralmente vem decimal (ex: 0.075), multiplicamos por 100.
-  const mediaAtingimento = resumo.atingimentoMedio 
-      ? (resumo.atingimentoMedio * 100) 
-      : (data.length > 0 ? (data.reduce((acc, curr) => acc + curr.atingimento, 0) / data.length) * 100 : 0);
-      
-  const totalMargem = resumo.margemTotal || data.reduce((acc, curr) => acc + curr.margemQtd, 0);
-
-  const ticketMedio = resumo.ticketMedio || '0.0'
-
-  const tmaMedio = resumo.tmaGeral || '00:00:00?'
-
-  const turnOver = resumo.turnOver 
-      ? (resumo.turnOver * 100) 
-      : (data.length > 0 ? (data.reduce((acc, curr) => acc + curr.atingimento, 0) / data.length) * 100 : 0);
-  
-  // Ranking da equipe (se disponível no rodapé)
-  const rankingEquipe = resumo.posicaoRanking ? `${resumo.posicaoRanking}º` : "-";
-
   // Separação por períodos para os gráficos
   // Filtramos apenas quem tem valor > 0 ou não é nulo para limpar o gráfico visualmente, se desejar
-  const manha = activeData
+  const integral = activeData
     .filter(d => d.periodo === 'INTEGRAL')
     .sort((a,b) => b.vendaPortabilidade - a.vendaPortabilidade);
 
@@ -145,86 +130,66 @@ const TeamSection = ({ supervisor, data, hideFired, rankingData }) => {
 
   return (
     <div className="card" style={{ marginBottom: '40px', borderTop: '4px solid var(--gold)' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #333', paddingBottom: '10px', marginBottom: '20px' }}>
-          <h2 style={{ margin: 0, color: 'var(--gold)' }}>EQUIPE {supervisor}</h2>
-          {rankingEquipe !== "-" && (
-              <span style={{ backgroundColor: '#D4AF37', color: '#000', padding: '5px 10px', borderRadius: '4px', fontWeight: 'bold' }}>
-                  Ranking: {rankingEquipe}
-              </span>
-          )}
-      </div>
       
-      <div className="flex-row" style={{ alignItems: 'flex-start', flexWrap: 'wrap', gap: '40px' }}>
+      {/* Cabeçalho */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #333', paddingBottom: '10px', marginBottom: '20px' }}>
+          <h2 style={{ margin: 0, color: 'var(--gold)' }}>EQUIPE {supervisor} {hideFired && <span style={{fontSize: '0.6em', color: '#888', marginLeft: '10px'}}>(Apresentação - Time de Vendas)</span>}</h2>
+          {kpiData.rankingPos && <span style={{ backgroundColor: '#D4AF37', color: '#000', padding: '5px 10px', borderRadius: '4px', fontWeight: 'bold' }}>Ranking: {kpiData.rankingPos}</span>}
+      </div>
+      <div className="flex-row" style={{ alignItems: 'flex-start', flexWrap: 'wrap', gap: '50px' }}>
         
-        {/* === CARD ESQUERDA: SUPERVISOR & KPI === */}
+        {/* KPI Esquerda (Com Abas) */}
         <div style={{ flex: '0 0 280px', background: '#151921', padding: '20px', borderRadius: '8px', textAlign: 'center' }}>
-           {/* Foto Supervisor */}
            <div style={{ position: 'relative', display: 'inline-block', marginBottom: '15px' }}>
-                <img 
+              <img 
                     src={`/fotos/${supervisor}.jpeg`} 
                     alt={supervisor} 
                     style={{ borderRadius: '50%', width: '130px', height: '130px', border: '3px solid var(--gold)', objectFit: 'cover' }} 
                 />
            </div>
+           <h3 style={{ color: '#fff', margin: '0 0 15px 0' }}>{supervisor}</h3>
            
-           <h3 style={{ color: '#fff', margin: '0 0 20px 0' }}>{supervisor}</h3>
-          
-          <div style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '15px' }}>
-            
-            <div style={{ borderBottom: '1px solid #333', paddingBottom: '10px' }}>
-                <span style={{color: '#888', fontSize: '0.9rem'}}>Total Vendido <TooltipInfo text="Total vendido no período"/></span>
-                <div style={{ fontSize: '1.4rem', color: 'var(--gold)', fontWeight: 'bold' }}>
-                    R$ {(totalVendido + totalMargem).toLocaleString('pt-BR', {minimumFractionDigits: 2})}
-                </div>
-            </div>
-
-            <div style={{ borderBottom: '1px solid #333', paddingBottom: '10px' }}>
-                <span style={{color: '#888', fontSize: '0.9rem'}}>Atingimento Médio <TooltipInfo text="% Média da meta da equipe" /></span>
-                <div style={{ fontSize: '1.4rem', color: '#fff', fontWeight: 'bold' }}>
-                    {mediaAtingimento.toFixed(1)}%
-                </div>
-            </div>
-
-            <div>
-                <span style={{color: '#888', fontSize: '0.9rem'}}>Margem/Cartão <TooltipInfo text="Quantidade Total vendida em Margem/Cartão" /></span>
-                <div style={{ fontSize: '1.4rem', color: '#fff', fontWeight: 'bold' }}>
-                    R$ {totalMargem.toLocaleString('pt-BR', {minimumFractionDigits: 2})}
-                </div>
-            </div>
-            
-            <div>
-                <span style={{color: '#888', fontSize: '0.9rem'}}>Ticket Médio <TooltipInfo text="Total vendido por operador" /></span>
-                <div style={{ fontSize: '1.4rem', color: '#fff', fontWeight: 'bold' }}>
-                    R$ {ticketMedio.toLocaleString('pt-BR', {minimumFractionDigits: 2})}
-                </div>
-            </div>
-
-            <div>
-                <span style={{color: '#888', fontSize: '0.9rem'}}>TMA <TooltipInfo text="Tempo médio em que cada operador da equipe permanece em atendimento" /></span>
-                <div style={{ fontSize: '1.4rem', color: '#fff', fontWeight: 'bold' }}>
-                    {tmaMedio}
-                </div>
-            </div>
-
-            <div>
-                <span style={{color: '#888', fontSize: '0.9rem'}}>TurnOver <TooltipInfo text="Taxa de rotatividade de colaboradores na equipe" /></span>
-                <div style={{ fontSize: '1.4rem', color: '#fff', fontWeight: 'bold' }}>
-                    {turnOver.toFixed(1)}%
-                </div>
-            </div>
-            
-
-          </div>
+           {/* LISTA DE KPI */}
+           <div style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+             <KPIRow label="Total Vendido" value={fmtMoney(kpiData.totalVendido)} color="var(--gold)" bold />
+             <KPIRow label="Atingimento" value={fmtPct(kpiData.atingimento)} />
+             <KPIRow label="Total Vendido (Margem)" value={fmtMoney(kpiData.margemVendido)} />
+             <KPIRow label="Margem (Qtd)" value={kpiData.margemQtd} />
+             
+             {!hideFired && (
+                 <>
+                    <div style={{borderTop: '1px solid #333', margin: '5px 0'}}></div>
+                    <KPIRow label="Ticket Médio" value={fmtMoney(kpiData.ticketMedio)} size="0.85rem" />
+                    <KPIRow label="TMA" value={kpiData.tma} size="0.85rem" />
+                    <KPIRow label="TurnOver" value={kpiData.turnOver} size="0.85rem" />
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{color:'#888', fontSize:'0.8rem'}}>Adm / Dem:</span>
+                        <span style={{color:'#fff', fontSize:'0.8rem'}}>
+                            <span style={{color:'#00b96b'}}>{kpiData.admissoes}</span> / <span style={{color:'#ff4d4f'}}>{kpiData.demissoes}</span>
+                        </span>
+                    </div>
+                 </>
+             )}
+           </div>
         </div>
 
         {/* === ÁREA DIREITA: GRÁFICOS === */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '30px', minWidth: '600px' }}>
-           {renderChart(manha, "INTEGRAL")}
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '30px', minWidth: '800px' }}>
+           {renderChart(integral, "INTEGRAL")}
         </div>
-
+        
       </div>
+
     </div>
   );
 };
+
+const KPIRow = ({ label, value, color = '#fff', bold = false, size = '0.9rem' }) => (
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <span style={{color: '#888', fontSize: size}}>{label}</span>
+        <span style={{color: color, fontWeight: bold ? 'bold' : 'normal', fontSize: size}}>{value}</span>
+    </div>
+);
+
 
 export default TeamSection;

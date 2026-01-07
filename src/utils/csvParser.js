@@ -33,22 +33,24 @@ const parseTime = (val) => {
     if (!val || val === '0' || val === 0 || val === '-') return '00:00:00';
     let str = val.toString().trim();
     
-    // Regex para capturar padrão Excel: "DIAS HORAS:MIN:SEG" (ex: "2 04:27:48")
+    // Padrão do Rodapé TOTAL: "8 4 19:32:47" (Núm Núm Tempo)
+    // Interpretação solicitada: 1º Núm = Dias (d), 2º Núm = Meses (m)
+    const totalMatch = str.match(/^(\d+)\s+(\d+)\s+(\d{2}:\d{2}:\d{2})$/);
+    if (totalMatch) {
+         return `${totalMatch[1]}d ${totalMatch[2]}m ${totalMatch[3]}`;
+    }
+
+    // Padrão Excel Duração: "3 08:35:00" (Dias Tempo)
     const durationMatch = str.match(/^(\d+)\s+(\d{2}:\d{2}:\d{2})$/);
-    
     if (durationMatch) {
         const days = parseInt(durationMatch[1], 10);
         const time = durationMatch[2];
-        
-        // Se tiver dias (> 0), formata como "2d 04:27:48"
-        // Se for 0 dias (ex: "0 16:39:54"), retorna apenas "16:39:54"
-        if (days > 0) {
-            return `${days}d ${time}`; 
-        } else {
-            return time;
-        }
+        // Se tiver dias, mostra "3d ...", senão só o tempo
+        if (days > 0) return `${days}d ${time}`; 
+        else return time;
     }
-
+    
+    // Padrão simples "hh:mm:ss" ou texto puro
     return str;
 };
 
@@ -134,22 +136,35 @@ export const parseCSV = (csvText, supervisorName) => {
         });
 
         // 4. Processar Resumo (Rodapé)
+        const createSummaryObj = (baseIndex) => {
+            if (!footerValuesRow) return {};
+            return {
+                totalVendido: parseNumber(footerValuesRow[baseIndex]),
+                atingimento: parseNumber(footerValuesRow[baseIndex + 1]),
+                margemQtd: parseInt(footerValuesRow[baseIndex + 2]) || 0,
+                ticketMedio: parseNumber(footerValuesRow[baseIndex + 3]),
+                tma: parseTime(footerValuesRow[baseIndex + 4]),
+                // Campos extras que variam (Ranking só tem no Geral, mas mantemos estrutura similar)
+                turnOver: (baseIndex === 0) ? (footerValuesRow[baseIndex + 6] || "-") : (footerValuesRow[baseIndex + 5] || "-"),
+                demissoes: (baseIndex === 0) ? parseInt(footerValuesRow[baseIndex + 7]) || 0 : parseInt(footerValuesRow[baseIndex + 6]) || 0,
+                admissoes: (baseIndex === 0) ? parseInt(footerValuesRow[baseIndex + 8]) || 0 : parseInt(footerValuesRow[baseIndex + 7]) || 0,
+                margemVendido: (baseIndex === 0) ? parseNumber(footerValuesRow[baseIndex + 9] || 0.0) : parseNumber(footerValuesRow[baseIndex + 8] || 0.0),
+                rankingPos: `${parseInt(footerValuesRow[5])}º`,
+            };
+        };
+
         const summary = {
-            totalVendido: footerValuesRow ? parseNumber(footerValuesRow[0]) : 0,
-            atingimentoMedio: footerValuesRow ? parseNumber(footerValuesRow[1]) : 0,
-            quantMargem: footerValuesRow ? parseNumber(footerValuesRow[2]) : 0, // Fallback se vier no índice 2
-            ticketMedio: footerValuesRow ? parseNumber(footerValuesRow[3]) : 0,
-            tmaGeral: footerValuesRow ? parseTime(footerValuesRow[4]) : "00:00:00",
-            posicaoRanking: footerValuesRow ? (parseInt(footerValuesRow[5]) || "-") : "-",
-            turnOver: footerValuesRow ? parseNumber(footerValuesRow[6]) : 0,
-            margemTotal: footerValuesRow ? parseNumber(footerValuesRow[7]) : 0,
+            geral: createSummaryObj(0),    // Colunas 0 a 9
+            manha: createSummaryObj(10),   // Colunas 10 a 18
+            tarde: createSummaryObj(19)    // Colunas 19 a 27
         };
         
-        // Fallback de soma manual se o rodapé estiver zerado ou ausente
-        if (!footerValuesRow || summary.totalVendido === 0) {
-            summary.totalVendido = operators.reduce((acc, op) => acc + op.vendaPortabilidade, 0);
-            summary.margemTotal = operators.reduce((acc, op) => acc + op.margemQtd, 0);
-            summary.atingimentoMedio = operators.length ? operators.reduce((acc, op) => acc + op.atingimento, 0) / operators.length : 0;
+        // Fallback simples se não tiver rodapé
+        if (!footerValuesRow) {
+            const total = operators.reduce((acc, op) => acc + op.vendaPortabilidade, 0);
+            summary.geral = { totalVendido: total, atingimento: 0, margemQtd: 0 };
+            summary.manha = { totalVendido: 0 };
+            summary.tarde = { totalVendido: 0 };
         }
 
         operators.summary = summary;
@@ -168,7 +183,7 @@ export const parseRankingCSV = (csvText) => {
     if (!csvText) { resolve([]); return; }
 
     Papa.parse(csvText, {
-      header: false, // Vamos mapear manualmente para garantir
+      header: false,
       skipEmptyLines: 'greedy',
       delimiter: ";", 
       
@@ -176,20 +191,32 @@ export const parseRankingCSV = (csvText) => {
         const rows = results.data;
         if (!rows || rows.length < 2) { resolve([]); return; }
 
-        // Remove o cabeçalho (Linha 0: Nome do Operador; Total Vendido...)
+        // Remove o cabeçalho (Linha 0: Pos.; Nome do Operador...)
         const dataRows = rows.slice(1);
 
         const rankingData = dataRows.map((row) => {
-            // Mapeamento baseado no RANKING_GERAL.CSV
-            // [0] Nome, [1] Total Vendido, [2] Leads, [3] TMA, [4] TTP, [5] TTF
-            if (!row[0]) return null;
+            // Verifica se é a linha de TOTAL (Geralmente Pos é vazio e Nome é TOTAL)
+            const isTotalRow = (row[1] && row[1].toString().toUpperCase() === 'TOTAL');
+
+            if (!row[1] && !isTotalRow) return null;
+
             return {
-                nome: row[0],
-                totalVendido: parseNumber(row[1]),
-                leads: parseInt(row[2]) || 0,
-                tma: parseTime(row[3]),
-                ttp: parseTime(row[4]),
-                ttf: parseTime(row[5])
+                isTotal: isTotalRow, // Flag para destacar no front-end
+                pos: isTotalRow ? "" : (parseInt(row[0]) || "-"),
+                nome: row[1],
+                totalVendido: parseNumber(row[2]),
+                atingimento: parseNumber(row[3]),
+                leads: parseInt(row[4]) || 0,
+                tma: parseTime(row[5]), // No Total pode vir formato diferente, mantemos string
+                ttp: parseTime(row[6]),
+                ttf: parseTime(row[7]),
+                
+                // Dados Extras para o Modal
+                periodo: row[8] || "-",
+                despedido: row[9] ? row[9].toString().toUpperCase().trim() === 'TRUE' : false,
+                atrasos: row[10] || "-",
+                ausencia: row[11] || "-",
+                dataAdmissao: row[12] || "-"
             };
         }).filter(item => item !== null);
 

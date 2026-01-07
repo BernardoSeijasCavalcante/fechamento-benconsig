@@ -1,19 +1,20 @@
-;Venda;;;;;;Desempenho do Atendimento;;;;;DETALHES DO REGIME;;Assiduidade;;
-;Pos. Ranking;Portabilidade;Atingimento;Margem/Cartão;Quant. Margem/Cartão;Venda Média por Dia;Leads. Atend. URA;TMA;TTP;TTF;Mín. Data;Período;Despedido;Atrasos;Ausências;Data de Admissão
-CAUA WENDELL AMORIM RODRIGUES;0; R$ -   ;0%; R$ -   ;0; R$ -   ;0;00:00:38;0 01:44:36;0 01:43:13;10/12/2025;TARDE;TRUE;X;X;10/12/2025
-EVELIN RYANNA ALVES DA SILVA;0; R$ -   ;0%; R$ -   ;0; R$ -   ;3;00:00:41;0 00:05:58;0 00:14:28;02/12/2025;TARDE;TRUE;X;X;01/12/2025
-FABRICIO VALERIANO RAMOS;60º; R$ 11.539,82 ;3%; R$ -   ;0; R$ 397,92 ;31;00:01:07;0 09:26:42;0 02:17:45;02/12/2025;TARDE;TRUE;X;X;01/12/2025
-GEOVANNY GUILHERME DOS SANTOS;0; R$ -   ;0%; R$ -   ;0; R$ -   ;208;00:02:32;0 16:23:43;0 17:28:57;15/12/2025;MANHÃ;FALSE;1;1;15/12/2025
-JOAO VICTOR DA SILVA PEREIRA;0; R$ -   ;0%; R$ -   ;0; R$ -   ;283;00:02:24;0 18:34:17;0 20:20:47;09/12/2025;MANHÃ;TRUE;X;X;09/12/2025
-JOAO VICTOR SANTOS PAIXAO;15º; R$ 167.477,70 ;48%; R$ -   ;0; R$ 5.775,09 ;290;00:01:16;1 17:06:15;0 15:03:42;02/12/2025;TARDE;TRUE;X;X;01/12/2025
-LUCAS DE SOUZA SILVA;62º; R$ 10.222,92 ;3%; R$ -   ;0; R$ 352,51 ;297;00:02:13;1 11:38:46;0 23:03:13;02/12/2025;TARDE;FALSE;2;0;
-MARIANNA ALVES BATISTA;50º; R$ 27.709,84 ;8%; R$ -   ;0; R$ 1.731,87 ;71;00:01:40;0 17:33:09;0 05:07:06;15/12/2025;MANHÃ;TRUE;X;X;15/12/2025
-MARINA LAURA PEREIRA DA SILVA;0; R$ -   ;0%; R$ -   ;0; R$ -   ;0;00:00:33;0 03:28:16;0 00:23:12;17/12/2025;TARDE;FALSE;0;0;16/12/2025
-MATHEUS ARAUJO;57º; R$ 17.660,42 ;5%; R$ -   ;0; R$ 802,75 ;233;00:01:50;1 04:39:10;0 19:55:39;09/12/2025;TARDE;FALSE;2;0;09/12/2025
-NICOLAS BARROS DA SILVA;47º; R$ 37.979,44 ;11%; R$ -   ;0; R$ 1.309,64 ;311;00:02:08;1 11:26:54;1 05:11:17;02/12/2025;TARDE;FALSE;2;0;
-SARAH GONCALVES FRANCA;0; R$ -   ;0%; R$ -   ;0; R$ -   ;36;00:02:03;0 03:27:13;0 01:33:54;15/12/2025;MANHÃ;TRUE;X;X;
-THAIS CRISTINA VEIGA DA SILVA;26º; R$ 101.025,16 ;29%; R$ -   ;0; R$ 3.483,63 ;318;00:02:15;1 17:40:24;1 02:43:37;02/12/2025;TARDE;FALSE;1;0;01/12/2025
-;;;;;;;;;;;;;;;;
-RESULTADO GERAL DA EQUIPE;;;;;;;;;;;;;;;;
-Total Venda Portabilidade;Atingimento;Margem/Cartão;Ticket Médio;TMA-RECEPTIVO;Pos. Ranking;TurnOver;Venda Margem/Cartão;;;;;;;;;
- R$ 461.532,00 ;16%; R$ -   ; R$ 28.845,75 ;00:01:38;5º;77%; R$ -   ;;;;;;;;;
+;Venda;;;;;;Desempenho do Atendimento;;;;;DETALHES DO REGIME;;Assiduidade;;;;;;;;;;;;;
+;Pos. Ranking;Portabilidade;Atingimento;Margem/Cartão;Quant. Margem/Cartão;Venda Média por Dia;Leads. Atend. URA;TMA;TTP;TTF;Mín. Data;Período;Despedido;Atrasos;Ausências;Data de Admissão;;;;;;;;;;;
+CAUA WENDELL AMORIM RODRIGUES;0; R$ -   ;0%; R$ -   ;0; R$ -   ;0;00:00:38;0 01:44:36;0 01:43:13;10/12/2025;TARDE;TRUE;X;X;10/12/2025;;;;;;;;;;;
+EVELIN RYANNA ALVES DA SILVA;0; R$ -   ;0%; R$ -   ;0; R$ -   ;3;00:00:41;0 00:05:58;0 00:14:28;02/12/2025;TARDE;TRUE;X;X;01/12/2025;;;;;;;;;;;
+FABRICIO VALERIANO RAMOS;60º; R$ 11.539,82 ;3%; R$ -   ;0; R$ 397,92 ;31;00:01:07;0 09:26:42;0 02:17:45;02/12/2025;TARDE;TRUE;X;X;01/12/2025;;;;;;;;;;;
+GEOVANNY GUILHERME DOS SANTOS;0; R$ -   ;0%; R$ -   ;0; R$ -   ;208;00:02:32;0 16:23:43;0 17:28:57;15/12/2025;MANHÃ;FALSE;1;1;15/12/2025;;;;;;;;;;;
+JOAO VICTOR DA SILVA PEREIRA;0; R$ -   ;0%; R$ -   ;0; R$ -   ;283;00:02:24;0 18:34:17;0 20:20:47;09/12/2025;MANHÃ;TRUE;X;X;09/12/2025;;;;;;;;;;;
+JOAO VICTOR SANTOS PAIXAO;15º; R$ 167.477,70 ;48%; R$ -   ;0; R$ 5.775,09 ;290;00:01:16;1 17:06:15;0 15:03:42;02/12/2025;TARDE;TRUE;X;X;01/12/2025;;;;;;;;;;;
+LUCAS DE SOUZA SILVA;62º; R$ 10.222,92 ;3%; R$ -   ;0; R$ 352,51 ;297;00:02:13;1 11:38:46;0 23:03:13;02/12/2025;TARDE;FALSE;2;0;;;;;;;;;;;;
+MARIANNA ALVES BATISTA;50º; R$ 27.709,84 ;8%; R$ -   ;0; R$ 1.731,87 ;71;00:01:40;0 17:33:09;0 05:07:06;15/12/2025;MANHÃ;TRUE;X;X;15/12/2025;;;;;;;;;;;
+MARINA LAURA PEREIRA DA SILVA;0; R$ -   ;0%; R$ -   ;0; R$ -   ;0;00:00:33;0 03:28:16;0 00:23:12;17/12/2025;TARDE;FALSE;0;0;16/12/2025;;;;;;;;;;;
+MATHEUS ARAUJO;57º; R$ 17.660,42 ;5%; R$ -   ;0; R$ 802,75 ;233;00:01:50;1 04:39:10;0 19:55:39;09/12/2025;TARDE;FALSE;2;0;09/12/2025;;;;;;;;;;;
+NICOLAS BARROS DA SILVA;47º; R$ 37.979,44 ;11%; R$ -   ;0; R$ 1.309,64 ;311;00:02:08;1 11:26:54;1 05:11:17;02/12/2025;TARDE;FALSE;2;0;;;;;;;;;;;;
+SARAH GONCALVES FRANCA;0; R$ -   ;0%; R$ -   ;0; R$ -   ;36;00:02:03;0 03:27:13;0 01:33:54;15/12/2025;MANHÃ;TRUE;X;X;;;;;;;;;;;;
+THAIS CRISTINA VEIGA DA SILVA;26º; R$ 101.025,16 ;29%; R$ -   ;0; R$ 3.483,63 ;318;00:02:15;1 17:40:24;1 02:43:37;02/12/2025;TARDE;FALSE;1;0;01/12/2025;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;
+RESULTADO GERAL DA EQUIPE;;;;;;;;;;RESULTADO PARCIAL - MANHÃ;;;;;;;;;RESULTADO PARCIAL - TARDE;;;;;;;;
+Total Venda Portabilidade;Atingimento;Margem/Cartão;Ticket Médio;TMA-RECEPTIVO;Pos. Ranking;TurnOver;Demissões;Admissões;Venda Margem/Cartão;Total Venda Portabilidade;Atingimento;Margem/Cartão;Ticket Médio;TMA-RECEPTIVO; TurnOver ;Demissões;Admissões;Venda Margem/Cartão;Total Venda Portabilidade;Atingimento;Margem/Cartão;Ticket Médio;TMA-RECEPTIVO; TurnOver ;Demissões;Admissões;Venda Margem/Cartão
+ R$ 461.532,00 ;8%; R$ -   ; R$ 28.845,75 ;00:01:38;5º;142%;7;10; R$ -   ;;0%;0; R$ -   ;00:02:10;50%;3;3;0;;0%;0; R$ -   ;00:01:24;92%;4;7; R$ -   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;

@@ -68,14 +68,14 @@ const Home = ({ allData }) => {
                 onClick={() => handleSelectMode('collaborator')}
                 style={{ padding: '15px', background: '#0074D9', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontSize: '1rem', fontWeight: 'bold' }}
               >
-                👤 Visão Colaborador
+                👤 Apresentação - Time de Vendas
               </button>
               
               <button 
                 onClick={() => handleSelectMode('director')}
                 style={{ padding: '15px', background: 'transparent', color: '#ff4d4f', border: '1px solid #ff4d4f', borderRadius: '5px', cursor: 'pointer', fontSize: '1rem' }}
               >
-                🕶️ Visão Diretor
+                🕶️ Apresentação - Diretoria
               </button>
             </div>
             

@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, LabelList } from 'recharts';
 import { useNavigate } from 'react-router-dom';
 import TooltipInfo from './TooltipInfo';
+import { User, Calendar, AlertCircle, Clock, X } from 'lucide-react';
 
 // Componente customizado para tornar o nome clicável
 const CustomYAxisTick = ({ x, y, payload, data, onClick }) => {
@@ -38,34 +39,103 @@ const CustomYAxisTick = ({ x, y, payload, data, onClick }) => {
   );
 };
 
+const RankingModal = ({ operator, onClose }) => {
+    if (!operator) return null;
+
+    return (
+        <div style={{
+            position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.85)', 
+            display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000
+        }}>
+            <div className="card" style={{ 
+                width: '500px', maxWidth: '95%', padding: '30px', 
+                position: 'relative', border: '2px solid var(--gold)',
+                background: '#151921'
+            }}>
+                <button onClick={onClose} style={{
+                    position: 'absolute', top: '15px', right: '15px', 
+                    background: 'none', border: 'none', color: '#fff', cursor: 'pointer'
+                }}>
+                    <X size={24} />
+                </button>
+
+                {/* Cabeçalho do Modal */}
+                <div style={{ textAlign: 'center', marginBottom: '25px' }}>
+                    <div style={{ display: 'inline-block', position: 'relative', marginBottom: '15px' }}>
+                        <img 
+                            src={`/fotos/${operator.nome}.jpeg`} 
+                            onError={(e) => { e.target.onerror = null; e.target.src = '/assets/user_placeholder.png'; }}
+                            alt={operator.nome} 
+                            style={{ 
+                                width: '100px', height: '100px', borderRadius: '50%', 
+                                objectFit: 'cover', border: '3px solid var(--gold)' 
+                            }} 
+                        />
+                    </div>
+                    <h2 style={{ color: operator.despedido ? '#ff4d4f' : '#fff', fontSize: '1.4rem', margin: '0 0 5px 0' }}>
+                        {operator.nome}
+                    </h2>
+                    <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', fontSize: '0.9rem', color: '#aaa' }}>
+                        <span>{operator.periodo}</span>
+                        <span>•</span>
+                        <span style={{ color: operator.despedido ? '#ff4d4f' : '#00b96b', fontWeight: 'bold' }}>
+                            {operator.despedido ? 'DESLIGADO' : 'ATIVO'}
+                        </span>
+                    </div>
+                </div>
+
+                {/* Grid de Informações */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                    <ModalInfoItem icon={<User size={16} />} label="Posição" value={`${operator.pos}º Lugar`} />
+                    <ModalInfoItem icon={<Calendar size={16} />} label="Admissão" value={operator.dataAdmissao} />
+                    
+                    <div style={{ gridColumn: 'span 2', height: '1px', background: '#333', margin: '5px 0' }}></div>
+                    
+                    <ModalInfoItem label="Total Vendido" value={`R$ ${operator.totalVendido.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`} color="var(--gold)" bold />
+                    <ModalInfoItem label="Atingimento" value={`${(operator.atingimento * 100).toFixed(1)}%`} />
+                    
+                    <ModalInfoItem icon={<Clock size={16} />} label="TMA" value={operator.tma} />
+                    <ModalInfoItem icon={<Clock size={16} />} label="Leads" value={operator.leads} />
+                    
+                    <ModalInfoItem label="TTP (Pausa)" value={operator.ttp} size="0.85rem" />
+                    <ModalInfoItem label="TTF (Falado)" value={operator.ttf} size="0.85rem" />
+
+                    <div style={{ gridColumn: 'span 2', height: '1px', background: '#333', margin: '5px 0' }}></div>
+
+                    <ModalInfoItem icon={<AlertCircle size={16} />} label="Atrasos" value={operator.atrasos} color={operator.atrasos !== '0' && operator.atrasos !== '-' ? '#ff4d4f' : '#fff'} />
+                    <ModalInfoItem icon={<AlertCircle size={16} />} label="Ausências" value={operator.ausencia} color={operator.ausencia !== '0' && operator.ausencia !== '-' ? '#ff4d4f' : '#fff'} />
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const ModalInfoItem = ({ icon, label, value, color = '#fff', bold = false, size = '1rem' }) => (
+    <div style={{ display: 'flex', flexDirection: 'column' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', color: '#888', fontSize: '0.8rem', marginBottom: '2px' }}>
+            {icon} {label}
+        </div>
+        <div style={{ color: color, fontWeight: bold ? 'bold' : 'normal', fontSize: size }}>
+            {value}
+        </div>
+    </div>
+);
+
 const TeamSection = ({ supervisor, data, hideFired, rankingData }) => {
   const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState('geral');
+  const [selectedRankingOp, setSelectedRankingOp] = useState(null);
 
   const activeData = hideFired 
       ? data.filter(d => !d.despedido) 
       : data;
 
   const resumo = data.summary || {};
-  
-  const totalVendido = resumo.totalVendido || data.reduce((acc, curr) => acc + curr.vendaPortabilidade, 0);
-  
-  // O atingimento no rodapé geralmente vem decimal (ex: 0.075), multiplicamos por 100.
-  const mediaAtingimento = resumo.atingimentoMedio 
-      ? (resumo.atingimentoMedio * 100) 
-      : (data.length > 0 ? (data.reduce((acc, curr) => acc + curr.atingimento, 0) / data.length) * 100 : 0);
-      
-  const totalMargem = resumo.margemTotal || data.reduce((acc, curr) => acc + curr.margemQtd, 0);
-  
-  const ticketMedio = resumo.ticketMedio || '0.0'
 
-  const tmaMedio = resumo.tmaGeral || '00:00:00?'
+  const fmtMoney = (val) => `R$ ${(val || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+  const fmtPct = (val) => `${((val || 0) * 100).toFixed(1)}%`;
 
-  const turnOver = resumo.turnOver 
-      ? (resumo.turnOver * 100) 
-      : (data.length > 0 ? (data.reduce((acc, curr) => acc + curr.atingimento, 0) / data.length) * 100 : 0);
-
-  // Ranking da equipe (se disponível no rodapé)
-  const rankingEquipe = resumo.posicaoRanking ? `${resumo.posicaoRanking}º` : "-";
+  let kpiData = resumo[activeTab] || {};
 
   // Separação por períodos para os gráficos
   // Filtramos apenas quem tem valor > 0 ou não é nulo para limpar o gráfico visualmente, se desejar
@@ -75,6 +145,10 @@ const TeamSection = ({ supervisor, data, hideFired, rankingData }) => {
       
   const tarde = activeData
     .filter(d => d.periodo === 'TARDE')
+    .sort((a,b) => b.vendaPortabilidade - a.vendaPortabilidade);
+
+  const integral = activeData
+    .filter(d => d.periodo === 'INTEGRAL')
     .sort((a,b) => b.vendaPortabilidade - a.vendaPortabilidade);
 
   const handleBarClick = (entry) => {
@@ -149,75 +223,66 @@ const TeamSection = ({ supervisor, data, hideFired, rankingData }) => {
 
   return (
     <div className="card" style={{ marginBottom: '40px', borderTop: '4px solid var(--gold)' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #333', paddingBottom: '10px', marginBottom: '20px' }}>
-          <h2 style={{ margin: 0, color: 'var(--gold)' }}>EQUIPE {supervisor}</h2>
-          {rankingEquipe !== "-" && (
-              <span style={{ backgroundColor: '#D4AF37', color: '#000', padding: '5px 10px', borderRadius: '4px', fontWeight: 'bold' }}>
-                  Ranking: {rankingEquipe}
-              </span>
-          )}
-      </div>
       
-      <div className="flex-row" style={{ alignItems: 'flex-start', flexWrap: 'wrap', gap: '40px' }}>
+      {/* Cabeçalho */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #333', paddingBottom: '10px', marginBottom: '20px' }}>
+          <h2 style={{ margin: 0, color: 'var(--gold)' }}>EQUIPE {supervisor} {hideFired && <span style={{fontSize: '0.6em', color: '#888', marginLeft: '10px'}}>(Apresentação - Time de Vendas)</span>}</h2>
+          {kpiData.rankingPos && <span style={{ backgroundColor: '#D4AF37', color: '#000', padding: '5px 10px', borderRadius: '4px', fontWeight: 'bold' }}>Ranking: {kpiData.rankingPos}</span>}
+      </div>
+      <div className="flex-row" style={{ alignItems: 'flex-start', flexWrap: 'wrap', gap: '50px' }}>
         
-        {/* === CARD ESQUERDA: SUPERVISOR & KPI === */}
+        {/* KPI Esquerda (Com Abas) */}
         <div style={{ flex: '0 0 280px', background: '#151921', padding: '20px', borderRadius: '8px', textAlign: 'center' }}>
-           {/* Foto Supervisor */}
            <div style={{ position: 'relative', display: 'inline-block', marginBottom: '15px' }}>
-                <img 
-                    src={`/fotos/${supervisor}.jpeg`}
-                    alt={supervisor}
+              <img 
+                    src={`/fotos/${supervisor}.jpeg`} 
+                    alt={supervisor} 
                     style={{ borderRadius: '50%', width: '130px', height: '130px', border: '3px solid var(--gold)', objectFit: 'cover' }} 
                 />
            </div>
+           <h3 style={{ color: '#fff', margin: '0 0 15px 0' }}>{supervisor}</h3>
            
-           <h3 style={{ color: '#fff', margin: '0 0 20px 0' }}>{supervisor}</h3>
-          
-          <div style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '15px' }}>
-            
-            <div style={{ borderBottom: '1px solid #333', paddingBottom: '10px' }}>
-                <span style={{color: '#888', fontSize: '0.9rem'}}>Total Vendido <TooltipInfo text="Total vendido no período"/></span>
-                <div style={{ fontSize: '1.4rem', color: 'var(--gold)', fontWeight: 'bold' }}>
-                    R$ {(totalVendido + totalMargem).toLocaleString('pt-BR', {minimumFractionDigits: 2})}
-                </div>
-            </div>
+           {/* ABAS DE SELEÇÃO */}
+           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '15px', borderBottom: '1px solid #333' }}>
+               {['geral', 'manha', 'tarde'].map(tab => (
+                   <button 
+                    key={tab} 
+                    onClick={() => setActiveTab(tab)}
+                    style={{
+                        background: 'none', border: 'none', 
+                        color: activeTab === tab ? 'var(--gold)' : '#666',
+                        fontWeight: activeTab === tab ? 'bold' : 'normal',
+                        borderBottom: activeTab === tab ? '2px solid var(--gold)' : '2px solid transparent',
+                        padding: '5px 10px', cursor: 'pointer', textTransform: 'uppercase', fontSize: '0.8rem'
+                    }}
+                   >
+                       {tab === 'geral' ? 'Geral' : tab === 'manha' ? 'Manhã' : 'Tarde'}
+                   </button>
+               ))}
+           </div>
 
-            <div style={{ borderBottom: '1px solid #333', paddingBottom: '10px' }}>
-                <span style={{color: '#888', fontSize: '0.9rem'}}>Atingimento Médio <TooltipInfo text="% Média da meta da equipe" /></span>
-                <div style={{ fontSize: '1.4rem', color: '#fff', fontWeight: 'bold' }}>
-                    {mediaAtingimento.toFixed(1)}%
-                </div>
-            </div>
-
-            <div>
-                <span style={{color: '#888', fontSize: '0.9rem'}}>Margem/Cartão <TooltipInfo text="Quantidade Total vendida em Margem/Cartão" /></span>
-                <div style={{ fontSize: '1.4rem', color: '#fff', fontWeight: 'bold' }}>
-                    R$ {totalMargem.toLocaleString('pt-BR', {minimumFractionDigits: 2})}
-                </div>
-            </div>
-            
-            <div>
-                <span style={{color: '#888', fontSize: '0.9rem'}}>Ticket Médio <TooltipInfo text="Total vendido por operador" /></span>
-                <div style={{ fontSize: '1.4rem', color: '#fff', fontWeight: 'bold' }}>
-                    R$ {ticketMedio.toLocaleString('pt-BR', {minimumFractionDigits: 2})}
-                </div>
-            </div>
-
-            <div>
-                <span style={{color: '#888', fontSize: '0.9rem'}}>TMA <TooltipInfo text="Tempo médio em que cada operador da equipe permanece em atendimento" /></span>
-                <div style={{ fontSize: '1.4rem', color: '#fff', fontWeight: 'bold' }}>
-                    {tmaMedio}
-                </div>
-            </div>
-
-            <div>
-                <span style={{color: '#888', fontSize: '0.9rem'}}>TurnOver <TooltipInfo text="Taxa de rotatividade de colaboradores na equipe" /></span>
-                <div style={{ fontSize: '1.4rem', color: '#fff', fontWeight: 'bold' }}>
-                    {turnOver.toFixed(1)}%
-                </div>
-            </div>
-
-          </div>
+           {/* LISTA DE KPI */}
+           <div style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+             <KPIRow label="Total Vendido" value={fmtMoney(kpiData.totalVendido)} color="var(--gold)" bold />
+             <KPIRow label="Atingimento" value={fmtPct(kpiData.atingimento)} />
+             <KPIRow label="Total Vendido (Margem)" value={fmtMoney(kpiData.margemVendido)} />
+             <KPIRow label="Margem (Qtd)" value={kpiData.margemQtd} />
+             
+             {!hideFired && (
+                 <>
+                    <div style={{borderTop: '1px solid #333', margin: '5px 0'}}></div>
+                    <KPIRow label="Ticket Médio" value={fmtMoney(kpiData.ticketMedio)} size="0.85rem" />
+                    <KPIRow label="TMA" value={kpiData.tma} size="0.85rem" />
+                    <KPIRow label="TurnOver" value={kpiData.turnOver} size="0.85rem" />
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{color:'#888', fontSize:'0.8rem'}}>Adm / Dem:</span>
+                        <span style={{color:'#fff', fontSize:'0.8rem'}}>
+                            <span style={{color:'#00b96b'}}>{kpiData.admissoes}</span> / <span style={{color:'#ff4d4f'}}>{kpiData.demissoes}</span>
+                        </span>
+                    </div>
+                 </>
+             )}
+           </div>
         </div>
 
         {/* === ÁREA DIREITA: GRÁFICOS === */}
@@ -225,46 +290,84 @@ const TeamSection = ({ supervisor, data, hideFired, rankingData }) => {
            {renderChart(manha, "MANHÃ")}
            <div style={{borderTop: '1px dashed #333'}}></div>
            {renderChart(tarde, "TARDE")}
+           <div style={{borderTop: '1px dashed #333'}}></div>
+           {(!hideFired) && (renderChart(integral, "INTEGRAL"))}
         </div>
         
       </div>
 
       {/* === RANKING GERAL (VISÃO DIRETOR) === */}
-      {!hideFired && rankingData && rankingData.length > 0 && (
+        {!hideFired && rankingData && rankingData.length > 0 && (
         <div style={{ marginTop: '50px', paddingTop: '30px', borderTop: '1px solid var(--gold)' }}>
             <h3 style={{color: 'var(--gold)', textAlign: 'center', marginBottom: '20px'}}>🏆 RANKING GERAL DA EMPRESA</h3>
             <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
                     <thead>
                         <tr style={{ background: '#151921', color: 'var(--gold)', textAlign: 'left' }}>
-                            <th style={{padding: '12px'}}>Pos</th>
-                            <th style={{padding: '12px'}}>Operador</th>
-                            <th style={{padding: '12px'}}>Total Vendido</th>
-                            <th style={{padding: '12px'}}>Leads</th>
-                            <th style={{padding: '12px'}}>TMA</th>
-                            <th style={{padding: '12px'}}>TTP (Pausa)</th>
-                            <th style={{padding: '12px'}}>TTF (Falado)</th>
+                            <th style={{padding: '10px'}}>Pos</th>
+                            <th style={{padding: '10px'}}>Operador</th>
+                            <th style={{padding: '10px'}}>Total Vendido</th>
+                            <th style={{padding: '10px'}}>Ating.</th>
+                            <th style={{padding: '10px'}}>Leads</th>
+                            <th style={{padding: '10px'}}>TMA</th>
+                            <th style={{padding: '10px'}}>TTP</th>
+                            <th style={{padding: '10px'}}>TTF</th>
+                            <th style={{padding: '10px'}}>Atrasos</th>
+                            <th style={{padding: '10px'}}>Aus.</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {rankingData.map((row, index) => (
-                            <tr key={index} style={{ borderBottom: '1px solid #333', background: index % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.03)' }}>
-                                <td style={{padding: '12px', fontWeight: 'bold'}}>{index + 1}º</td>
-                                <td style={{padding: '12px'}}>{row.nome}</td>
-                                <td style={{padding: '12px', color: 'var(--gold)', fontWeight: 'bold'}}>R$ {row.totalVendido.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
-                                <td style={{padding: '12px'}}>{row.leads}</td>
-                                <td style={{padding: '12px'}}>{row.tma}</td>
-                                <td style={{padding: '12px'}}>{row.ttp}</td>
-                                <td style={{padding: '12px'}}>{row.ttf}</td>
-                            </tr>
-                        ))}
+                        {rankingData.map((row, index) => {
+                            const isTotal = row.isTotal;
+                            const isFired = row.despedido;
+                            const rowStyle = isTotal 
+                                ? { background: 'var(--gold)', color: '#000', fontWeight: 'bold', borderTop: '2px solid #fff' }
+                                : { borderBottom: '1px solid #333', background: index % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.03)' };
+
+                            return (
+                                <tr 
+                                    key={index} 
+                                    style={rowStyle}
+                                    onClick={() => !isTotal && setSelectedRankingOp(row)} // Abre modal ao clicar (se não for total)
+                                >
+                                    <td style={{padding: '10px'}}>{row.pos}</td>
+                                    <td style={{
+                                        padding: '10px', 
+                                        color: isTotal ? '#000' : (isFired ? '#ff4d4f' : '#fff'), 
+                                        cursor: !isTotal ? 'pointer' : 'default',
+                                        textDecoration: 'none'
+                                    }}>
+                                        {row.nome}
+                                    </td>
+                                    <td style={{padding: '10px', fontWeight: 'bold'}}>R$ {row.totalVendido.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                                    <td style={{padding: '10px'}}>{(row.atingimento * 100).toFixed(0)}%</td>
+                                    <td style={{padding: '10px'}}>{row.leads}</td>
+                                    <td style={{padding: '10px'}}>{row.tma}</td>
+                                    <td style={{padding: '10px'}}>{row.ttp}</td>
+                                    <td style={{padding: '10px'}}>{row.ttf}</td>
+                                    <td style={{padding: '10px'}}>{row.atrasos}</td>
+                                    <td style={{padding: '10px'}}>{row.ausencia}</td>
+                                </tr>
+                            );
+                        })}
                     </tbody>
                 </table>
             </div>
         </div>
       )}
+
+      {selectedRankingOp && (
+          <RankingModal operator={selectedRankingOp} onClose={() => setSelectedRankingOp(null)} />
+      )}
     </div>
   );
 };
+
+const KPIRow = ({ label, value, color = '#fff', bold = false, size = '0.9rem' }) => (
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <span style={{color: '#888', fontSize: size}}>{label}</span>
+        <span style={{color: color, fontWeight: bold ? 'bold' : 'normal', fontSize: size}}>{value}</span>
+    </div>
+);
 
 export default TeamSection;
