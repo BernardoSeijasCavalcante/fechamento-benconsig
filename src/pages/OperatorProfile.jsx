@@ -11,6 +11,8 @@ const OperatorProfile = () => {
 
   if (!operator) return <div className="container">Operador não encontrado.</div>;
 
+  const geralDesc = operator.performance?.find(p => p.Equipe === 'GERAL') || {};
+
   const StatusBadge = ({ isFired }) => (
     <span style={{ 
       backgroundColor: isFired ? 'rgba(255, 77, 79, 0.2)' : 'rgba(0, 185, 107, 0.2)', 
@@ -72,13 +74,13 @@ const OperatorProfile = () => {
            <div className="stat-box" style={{ background: '#151921', padding: '20px', borderRadius: '8px', border: '1px solid #333' }}>
               <span className="label" style={{color: '#888'}}>Portabilidade</span>
               <div className="value" style={{fontSize: '1.8rem', fontWeight: 'bold', color: 'var(--gold)'}}>
-                  R$ {operator.vendaPortabilidade.toLocaleString('pt-BR', {minimumFractionDigits: 2})}
+                  R$ {(geralDesc.Integrado ?? operator.vendaPortabilidade ?? 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}
               </div>
            </div>
            <div className="stat-box" style={{ background: '#151921', padding: '20px', borderRadius: '8px', border: '1px solid #333' }}>
               <span className="label" style={{color: '#888'}}>Atingimento</span>
               <div className="value" style={{fontSize: '1.8rem', fontWeight: 'bold', color: operator.atingimento >= 1 ? '#00b96b' : '#fff'}}>
-                  {(operator.atingimento * 100).toFixed(1)}%
+                  {((geralDesc['atingimento-integrado'] ?? operator.atingimento ?? 0) * 100).toFixed(1)}%
               </div>
            </div>
 
@@ -107,20 +109,20 @@ const OperatorProfile = () => {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '20px', marginTop: '20px' }}>
                     <div>
                         <span style={{color: '#888', fontSize: '0.9rem'}}>Leads Atendidos - URA</span>
-                        <div style={{fontSize: '1.4rem', fontWeight: 'bold'}}>{operator.recLeads}</div>
+                        <div style={{fontSize: '1.4rem', fontWeight: 'bold'}}>{geralDesc.leads ?? operator.recLeads ?? 0}</div>
                     </div>
                     <div>
                         <span style={{color: '#888', fontSize: '0.9rem'}}>TMA <TooltipInfo text="Tempo Médio de Atendimento" /></span>
-                        <div style={{fontSize: '1.4rem', fontWeight: 'bold'}}>{operator.recTMA}</div>
+                        <div style={{fontSize: '1.4rem', fontWeight: 'bold'}}>{geralDesc.tma ?? operator.recTMA ?? "00:00:00"}</div>
                     </div>
                     <div>
                         <span style={{color: '#888', fontSize: '0.9rem'}}>TTP <TooltipInfo text="Tempo Total em Pausa" /></span>
                         {/* Se houver dias, o tamanho da fonte ajusta um pouco se necessário, mas o layout fluido deve segurar */}
-                        <div style={{fontSize: '1.4rem', fontWeight: 'bold', wordBreak: 'break-word'}}>{operator.recTMP}</div>
+                        <div style={{fontSize: '1.4rem', fontWeight: 'bold', wordBreak: 'break-word'}}>{geralDesc.ttp ?? operator.recTMP ?? "00:00:00"}</div>
                     </div>
                     <div>
                         <span style={{color: '#888', fontSize: '0.9rem'}}>TTF <TooltipInfo text="Tempo Total em Atendimento" /></span>
-                        <div style={{fontSize: '1.4rem', fontWeight: 'bold', wordBreak: 'break-word'}}>{operator.recHoras}</div>
+                        <div style={{fontSize: '1.4rem', fontWeight: 'bold', wordBreak: 'break-word'}}>{geralDesc.ttf ?? operator.recHoras ?? "00:00:00"}</div>
                     </div>
                 </div>
             </div>
