@@ -1,0 +1,25 @@
+# Antigravity Context: Frontend API Integration
+
+## Estado do Projeto
+O frontend do dashboard (`fechamento-benconsig`) foi inteiramente refatorado para consumir dados dinamicamente a partir dos novos endpoints da API (`Carrosel-BenApi`), abandonando a arquitetura legada baseada na leitura local de arquivos Excel/CSV via `PapaParse`.
+
+## O Que Foi Desenvolvido e Concluído
+1. **Nova Camada de API (`src/services/api.js`)**:
+   - Foram implementadas requisições HTTP (com `fetch`) para os endpoints `/api/fechamento/equipes` e `/api/fechamento/ranking`.
+   - A configuração utiliza a variável de ambiente `VITE_API_URL`, tendo como fallback a porta padrão local `http://localhost:3000`.
+
+2. **Remoção de Código Legado**:
+   - Os diretórios e arquivos de processamento local estático foram deletados completamente (`src/data/`, planilhas e `csvParser.js`).
+
+3. **Adaptação Dinâmica do `App.jsx`**:
+   - O aplicativo agora despacha e aguarda via Promessas a resolução da base da API logo na inicialização no `useEffect()`. 
+   - Dependências defasadas relativas a mock-objects locais e roteamentos condicionais restritivos que forçavam renderizações baseadas em nome hard-coded foram varridas.
+
+4. **Painéis das Equipes (`TeamSection.jsx` e `OperatorProfile.jsx`)**:
+   - A subestrutura engessada (como o `TeamSection_CLT.jsx`) foi suprimida.
+   - O componente genérico principal agora consolida todos os comportamentos lendo o array de `performance` retornado pelo Payload JSON.
+   - Acessos a variáveis como "vendaPortabilidade" foram mapeados corretamente para seus equivalentes como `Integrado`, verificando precisamente as origens de `"GERAL"` x `"Supervisor"`.
+   - Modais exibem calculos atualizados (inclusive garantindo seguranças Nullish `??`), protegendo contra faltas nativas na base da API, para manter o front imune à `TypeErrors`.
+
+## Status da Validação
+O comando de verificação e minificação (`npm run build` do `Vite`) completou sem gargalos sistêmicos de compilação ou importação. A estrutura do front-end agora é enxuta e pronta para orquestração final juntamente com o servidor de backend a ser concebido.
