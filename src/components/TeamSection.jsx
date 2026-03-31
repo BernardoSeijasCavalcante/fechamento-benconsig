@@ -4,6 +4,9 @@ import { useNavigate } from 'react-router-dom';
 import TooltipInfo from './TooltipInfo';
 import { User, Calendar, AlertCircle, Clock, X } from 'lucide-react';
 
+const fmtMoney = (val) => (val || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+const fmtPct = (val) => `${((val || 0) * 100).toFixed(1)}%`;
+
 // Componente customizado para tornar o nome clicável
 const CustomYAxisTick = ({ x, y, payload, data, onClick }) => {
     const operator = data.find(d => d.nome === payload.value);
@@ -121,13 +124,15 @@ const ModalInfoItem = ({ icon, label, value, color = '#fff', bold = false, size 
     </div>
 );
 
-const TeamSection = ({ supervisor, data, hideFired, rankingData }) => {
+const TeamSection = ({ supervisor, data, summary, hideFired, rankingData }) => {
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('geral');
     const [selectedRankingOp, setSelectedRankingOp] = useState(null);
 
     const perfilRequerido = hideFired ? supervisor : "GERAL";
-    const activeData = data
+    const operadoresArray = Array.isArray(data) ? data : (data?.operadores || []);
+    
+    const activeData = operadoresArray
         .filter(d => !hideFired || !d.despedido)
         .map(d => {
             const perf = d.performance?.find(p => p.Equipe === perfilRequerido) || {};
@@ -137,41 +142,60 @@ const TeamSection = ({ supervisor, data, hideFired, rankingData }) => {
             };
         });
 
-    // kpiData is now calculated from the activeData performance arrays
-    const calculateKPIs = () => {
-        let totalIntegrado = 0;
-        let totalAtingimento = 0;
-        let qtd = 0;
-        
-        activeData.forEach(d => {
-            const perf = d.performance?.find(p => p.Equipe === perfilRequerido);
-            if (perf) {
-                totalIntegrado += (perf.Integrado || 0);
-                totalAtingimento += (perf['atingimento-integrado'] || perf.atingimento || 0);
-                qtd++;
-            }
-        });
+    const kpiSummary = summary || {};
+    
+    // Extrai as chaves de sumário válidas que possuem dados
+    const availableTabs = Object.keys(kpiSummary).filter(key => 
+        kpiSummary[key] && typeof kpiSummary[key] === 'object' && Object.keys(kpiSummary[key]).length > 0
+    );
 
-        const avgAtingimento = qtd > 0 ? (totalAtingimento / qtd) : 0;
-        
-        return {
-            totalVendido: totalIntegrado,
-            atingimento: avgAtingimento,
-            // Fallbacks for now as these aren't in the new payload 
-            margemVendido: 0, 
-            margemQtd: 0,
-            ticketMedio: totalIntegrado / 16,
-            tma: "00:00:00",
-            turnOver: 0,
-            admissoes: 0,
-            demissoes: 0,
-            rankingPos: resumo[activeTab]?.rankingPos
-        };
+    // Ordena as abas para que 'geral' fique sempre como a primeira
+    availableTabs.sort((a, b) => {
+        if (a === 'geral') return -1;
+        if (b === 'geral') return 1;
+        return 0;
+    });
+
+    // Garante que uma aba válida está selecionada
+    const currentTab = availableTabs.includes(activeTab) ? activeTab : (availableTabs[0] || 'geral');
+
+    const kpiDataTemp = kpiSummary[currentTab] || kpiSummary['geral'] || {
+        totalVendido: 0,
+        atingimento: 0,
+        margemVendido: 0, 
+        margemQtd: 0,
+        ticketMedio: 0,
+        tma: "00:00:00",
+        turnOver: 0,
+        admissoes: 0,
+        demissoes: 0,
+    };
+    
+    let kpiData = {
+        ...kpiDataTemp,
+        rankingPos: undefined // Fallback till implemented by API if needed
     };
 
-    let kpiData = calculateKPIs();
+    // --- NORMALIZAÇÃO DO RANKING (DIRETORIA) ---
+    // O backend envia os dados métricos aninhados em 'performance'. 
+    // Normalizamos aqui para garantir que a tabela encontre Integrado, atingimento, leads etc.
+    const processedRanking = (rankingData || []).map(row => {
+        const perfGeral = row.performance?.find(p => p.Equipe === 'GERAL') || {};
+        return {
+            ...row,
+            // Normaliza a posição (o backend envia ranking-geral ou ranking-integrado)
+            pos: row.pos || row['ranking-geral'] || row['ranking-integrado'] || (row.isTotal ? "" : "-"),
+            // Traz métricas do aninhamento para o topo (fallbacks de segurança)
+            Integrado: row.Integrado ?? perfGeral.Integrado ?? 0,
+            atingimento: row.atingimento ?? perfGeral['atingimento-integrado'] ?? perfGeral.atingimento ?? 0,
+            leads: row.leads ?? perfGeral.leads ?? 0,
+            tma: row.tma ?? perfGeral.tma ?? "00:00:00",
+            ttp: row.ttp ?? perfGeral.ttp ?? "00:00:00",
+            ttf: row.ttf ?? perfGeral.ttf ?? "00:00:00",
+        };
+    });
 
-    // Separação por períodos para os gráficos
+    // Separação por períodos para os gráficos...
     // Filtramos apenas quem tem valor > 0 ou não é nulo para limpar o gráfico visualmente, se desejar
     const manha = activeData
         .filter(d => (d.periodo === 'MANH' || d.periodo === 'MANHÃ'))
@@ -281,7 +305,27 @@ const TeamSection = ({ supervisor, data, hideFired, rankingData }) => {
                     <h3 style={{ color: '#fff', margin: '0 0 15px 0' }}>{supervisor}</h3>
 
                     {/* ABAS DE SELEÇÃO */}
-                    <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '15px', borderBottom: '1px solid #333', minHeight: '33px' }}>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '5px', marginBottom: '15px', borderBottom: '1px solid #333', minHeight: '33px', paddingBottom: '10px' }}>
+                        {availableTabs.map(tab => (
+                            <button
+                                key={tab}
+                                onClick={() => setActiveTab(tab)}
+                                style={{
+                                    background: 'none',
+                                    border: 'none',
+                                    borderBottom: currentTab === tab ? '2px solid var(--gold)' : '2px solid transparent',
+                                    color: currentTab === tab ? 'var(--gold)' : '#888',
+                                    fontWeight: currentTab === tab ? 'bold' : 'normal',
+                                    cursor: 'pointer',
+                                    padding: '5px 10px',
+                                    fontSize: '0.85rem',
+                                    transition: 'all 0.3s ease',
+                                    textTransform: 'capitalize'
+                                }}
+                            >
+                                {tab === 'manha' ? 'Manhã' : tab}
+                            </button>
+                        ))}
                     </div>
 
                     {/* LISTA DE KPI */}
@@ -340,7 +384,7 @@ const TeamSection = ({ supervisor, data, hideFired, rankingData }) => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {rankingData.map((row, index) => {
+                                {processedRanking.map((row, index) => {
                                     const isTotal = row.isTotal;
                                     const isFired = row.despedido;
                                     const rowStyle = isTotal

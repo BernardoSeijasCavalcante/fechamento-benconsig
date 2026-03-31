@@ -111,7 +111,8 @@ const TeamPage = ({ allData, rankingData }) => {
 
       <TeamSection
         supervisor={supervisor}
-        data={data}
+        data={data?.operadores || []}
+        summary={data?.summary || {}}
         hideFired={mode === 'collaborator'}
         rankingData={rankingData}
       />

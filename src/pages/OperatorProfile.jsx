@@ -69,7 +69,7 @@ const OperatorProfile = () => {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '40px' }}>
            <div className="stat-box" style={{ background: '#151921', padding: '20px', borderRadius: '8px', border: '1px solid #333' }}>
               <span className="label" style={{color: '#888'}}>Ranking Geral</span>
-              <div className="value" style={{fontSize: '1.8rem', fontWeight: 'bold', color: '#fff'}}>{operator.posRanking}º</div>
+              <div className="value" style={{fontSize: '1.8rem', fontWeight: 'bold', color: '#fff'}}>{geralDesc?.['ranking-integrado'] ?? operator['ranking-integrado'] ?? '-'}º</div>
            </div>
            <div className="stat-box" style={{ background: '#151921', padding: '20px', borderRadius: '8px', border: '1px solid #333' }}>
               <span className="label" style={{color: '#888'}}>Portabilidade</span>
@@ -87,14 +87,14 @@ const OperatorProfile = () => {
           <div className="stat-box" style={{ background: '#151921', padding: '20px', borderRadius: '8px', border: '1px solid #333' }}>
               <span className="label" style={{color: '#888'}}>Margem/Cartão</span>
               <div className="value" style={{fontSize: '1.8rem', fontWeight: 'bold', color: '#fff'}}>
-                 R$ {operator.margemValor.toLocaleString('pt-BR', {minimumFractionDigits: 2})}
+                 R$ {(operator.margemValor ?? 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}
               </div>
            </div>
 
            <div className="stat-box" style={{ background: '#151921', padding: '20px', borderRadius: '8px', border: '1px solid #333' }}>
               <span className="label" style={{color: '#888'}}>Quant. Margem/Cartão</span>
               <div className="value" style={{fontSize: '1.8rem', fontWeight: 'bold', color: '#fff'}}>
-                 {operator.margemQtd} <span style={{fontSize: '1rem', fontWeight: 'normal'}}>un.</span>
+                 {operator.margemQtd ?? 0} <span style={{fontSize: '1rem', fontWeight: 'normal'}}>un.</span>
               </div>
            </div>
         </div>
