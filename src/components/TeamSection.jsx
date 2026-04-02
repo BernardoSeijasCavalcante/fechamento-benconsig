@@ -131,7 +131,7 @@ const TeamSection = ({ supervisor, data, summary, hideFired, rankingData }) => {
 
     const perfilRequerido = hideFired ? supervisor : "GERAL";
     const operadoresArray = Array.isArray(data) ? data : (data?.operadores || []);
-    
+
     const activeData = operadoresArray
         .filter(d => !hideFired || !d.despedido)
         .map(d => {
@@ -143,9 +143,9 @@ const TeamSection = ({ supervisor, data, summary, hideFired, rankingData }) => {
         });
 
     const kpiSummary = summary || {};
-    
+
     // Extrai as chaves de sumário válidas que possuem dados
-    const availableTabs = Object.keys(kpiSummary).filter(key => 
+    const availableTabs = Object.keys(kpiSummary).filter(key =>
         kpiSummary[key] && typeof kpiSummary[key] === 'object' && Object.keys(kpiSummary[key]).length > 0
     );
 
@@ -162,7 +162,7 @@ const TeamSection = ({ supervisor, data, summary, hideFired, rankingData }) => {
     const kpiDataTemp = kpiSummary[currentTab] || kpiSummary['geral'] || {
         totalVendido: 0,
         atingimento: 0,
-        margemVendido: 0, 
+        margemVendido: 0,
         margemQtd: 0,
         ticketMedio: 0,
         tma: "00:00:00",
@@ -170,7 +170,7 @@ const TeamSection = ({ supervisor, data, summary, hideFired, rankingData }) => {
         admissoes: 0,
         demissoes: 0,
     };
-    
+
     let kpiData = {
         ...kpiDataTemp,
         rankingPos: undefined // Fallback till implemented by API if needed
@@ -184,7 +184,7 @@ const TeamSection = ({ supervisor, data, summary, hideFired, rankingData }) => {
         return {
             ...row,
             // Normaliza a posição (o backend envia ranking-geral ou ranking-integrado)
-            pos: row.pos || row['ranking-geral'] || row['ranking-integrado'] || (row.isTotal ? "" : "-"),
+            pos: row.pos || row['ranking-integrado'] || (row.isTotal ? "" : "-"),
             // Traz métricas do aninhamento para o topo (fallbacks de segurança)
             Integrado: row.Integrado ?? perfGeral.Integrado ?? 0,
             atingimento: row.atingimento ?? perfGeral['atingimento-integrado'] ?? perfGeral.atingimento ?? 0,
@@ -397,7 +397,7 @@ const TeamSection = ({ supervisor, data, summary, hideFired, rankingData }) => {
                                             style={rowStyle}
                                             onClick={() => !isTotal && setSelectedRankingOp(row)} // Abre modal ao clicar (se não for total)
                                         >
-                                            <td style={{ padding: '10px' }}>{row.pos}</td>
+                                            <td style={{ padding: '10px' }}>{row.pos}º</td>
                                             <td style={{
                                                 padding: '10px',
                                                 color: isTotal ? '#000' : (isFired ? '#ff4d4f' : '#fff'),
@@ -407,7 +407,7 @@ const TeamSection = ({ supervisor, data, summary, hideFired, rankingData }) => {
                                                 {row.nome}
                                             </td>
                                             <td style={{ padding: '10px', fontWeight: 'bold' }}>R$ {row.Integrado.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
-                                            <td style={{ padding: '10px' }}>{(row.atingimento * 100).toFixed(0)}%</td>
+                                            <td style={{ padding: '10px' }}>{((row.atingimento || 0) * 100).toFixed(0)}%</td>
                                             <td style={{ padding: '10px' }}>{row.leads}</td>
                                             <td style={{ padding: '10px' }}>{row.tma}</td>
                                             <td style={{ padding: '10px' }}>{row.ttp}</td>
