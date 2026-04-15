@@ -9,7 +9,7 @@ import './App.css'
 import './styles/App.css';
 
 // --- COMPONENTE HOME (Menu de Seleção) ---
-const Home = ({ allData }) => {
+const Home = ({ allData, periodo, setPeriodo }) => {
   const navigate = useNavigate();
   const [selectedSupervisor, setSelectedSupervisor] = useState(null);
 
@@ -25,6 +25,40 @@ const Home = ({ allData }) => {
     <div className="container" style={{ textAlign: 'center', paddingTop: '50px' }}>
       <img src={Logo} alt="BC Logo" style={{ height: '150px', marginBottom: '20px' }} />
       <h1 style={{ marginBottom: '40px' }}>Selecione a <span className="text-gold">Equipe</span></h1>
+
+      {/* Toggle de Período */}
+      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '30px', gap: '10px' }}>
+        <button 
+          onClick={() => setPeriodo('mes_passado')}
+          style={{
+            padding: '10px 20px',
+            borderRadius: '20px',
+            border: '1px solid var(--gold)',
+            background: periodo === 'mes_passado' ? 'var(--gold)' : 'transparent',
+            color: periodo === 'mes_passado' ? '#000' : 'var(--gold)',
+            cursor: 'pointer',
+            fontWeight: 'bold',
+            transition: 'all 0.3s'
+          }}
+        >
+          Mês Passado
+        </button>
+        <button 
+          onClick={() => setPeriodo('quinzena_atual')}
+          style={{
+            padding: '10px 20px',
+            borderRadius: '20px',
+            border: '1px solid var(--gold)',
+            background: periodo === 'quinzena_atual' ? 'var(--gold)' : 'transparent',
+            color: periodo === 'quinzena_atual' ? '#000' : 'var(--gold)',
+            cursor: 'pointer',
+            fontWeight: 'bold',
+            transition: 'all 0.3s'
+          }}
+        >
+          Quinzena Atual (1 a 15)
+        </button>
+      </div>
 
       {/* Grid de Botões */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', maxWidth: '800px', margin: '0 auto' }}>
@@ -125,11 +159,13 @@ function App() {
   const [dataByTeam, setDataByTeam] = useState({});
   const [rankingData, setRankingData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [periodo, setPeriodo] = useState('mes_passado');
 
   useEffect(() => {
     const loadAllData = async () => {
+      setLoading(true);
       try {
-        const [equipes, ranking] = await Promise.all([getEquipes(), getRanking()]);
+        const [equipes, ranking] = await Promise.all([getEquipes(periodo), getRanking(periodo)]);
         console.log(equipes);
         console.log(ranking);
         setDataByTeam(equipes);
@@ -140,7 +176,7 @@ function App() {
       setLoading(false);
     };
     loadAllData();
-  }, []);
+  }, [periodo]);
 
   if (loading) return <div className="container">Carregando...</div>;
 
@@ -148,7 +184,7 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route element={<Layout />}>
-          <Route path="/" element={<Home allData={dataByTeam} />} />
+          <Route path="/" element={<Home allData={dataByTeam} periodo={periodo} setPeriodo={setPeriodo} />} />
           <Route path="/team/:supervisor" element={<TeamPage allData={dataByTeam} rankingData={rankingData} />} />
           <Route path="/operator/:name" element={<OperatorProfile />} />
         </Route>
